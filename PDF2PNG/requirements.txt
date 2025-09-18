@@ -1,0 +1,21 @@
+# PDF2PNG/PDF2PPTX Application Dependencies
+# Core PDF processing
+PyMuPDF>=1.23.0
+
+# PowerPoint generation
+python-pptx>=0.6.21
+
+# Image processing
+Pillow>=10.0.0
+
+# GUI framework (included with Python, but listed for completeness)
+# tkinter - included with Python standard library
+
+# Type checking and development dependencies (optional)
+mypy>=1.5.0
+black>=23.0.0
+pytest>=7.4.0
+pytest-cov>=4.1.0
+
+# Additional utilities
+pathlib2>=2.3.7; python_version<"3.6"
