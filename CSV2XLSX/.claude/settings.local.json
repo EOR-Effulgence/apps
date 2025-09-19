@@ -11,7 +11,8 @@
       "Bash(powershell:*)",
       "Bash(uv:*)",
       "Bash(where uv)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
