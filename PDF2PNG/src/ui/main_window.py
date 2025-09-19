@@ -19,6 +19,7 @@ from ..utils.error_handling import (
     setup_logging
 )
 from ..utils.path_utils import PathManager
+from ..config import get_app_config, save_app_config
 from .converters import ImageConverter, PPTXConverter
 
 
@@ -244,6 +245,13 @@ class MainWindow:
         )
         self.auto_rotate_check.grid(row=1, column=0, columnspan=3, pady=(0, 5), sticky="w")
 
+        # PowerPoint label settings frame
+        pptx_frame = tk.LabelFrame(self.root, text="PowerPoint ラベル設定", font=("Arial", 10))
+        pptx_frame.pack(padx=10, pady=5, fill="x")
+
+        # Create PowerPoint settings UI
+        self._create_powerpoint_settings(pptx_frame)
+
         # Buttons frame
         buttons_frame = tk.Frame(self.root)
         buttons_frame.pack(padx=10, pady=(0, 10), fill="x")
@@ -389,6 +397,104 @@ class MainWindow:
         )
         if result:
             self.controller.reset_folders()
+
+    def _create_powerpoint_settings(self, parent_frame) -> None:
+        """Create PowerPoint label configuration UI."""
+        # Load current configuration
+        config = get_app_config()
+        label_config = config.powerpoint_label
+
+        # Store variables for configuration
+        self.pptx_vars = {}
+
+        # Text color setting
+        color_frame = tk.Frame(parent_frame)
+        color_frame.pack(fill="x", padx=5, pady=2)
+
+        tk.Label(color_frame, text="文字色:", font=("Arial", 9)).pack(side="left")
+        self.pptx_vars['text_color'] = tk.StringVar(value=label_config.text_color)
+        text_color_entry = tk.Entry(color_frame, textvariable=self.pptx_vars['text_color'], width=8)
+        text_color_entry.pack(side="left", padx=(5, 0))
+
+        # Background color setting
+        tk.Label(color_frame, text="背景色:", font=("Arial", 9)).pack(side="left", padx=(10, 0))
+        self.pptx_vars['background_color'] = tk.StringVar(value=label_config.background_color)
+        bg_color_entry = tk.Entry(color_frame, textvariable=self.pptx_vars['background_color'], width=8)
+        bg_color_entry.pack(side="left", padx=(5, 0))
+
+        # Border color setting (set to red as requested)
+        tk.Label(color_frame, text="枠線色:", font=("Arial", 9)).pack(side="left", padx=(10, 0))
+        self.pptx_vars['border_color'] = tk.StringVar(value="#FF0000")  # Red as requested
+        border_color_entry = tk.Entry(color_frame, textvariable=self.pptx_vars['border_color'], width=8)
+        border_color_entry.pack(side="left", padx=(5, 0))
+
+        # Font settings frame
+        font_frame = tk.Frame(parent_frame)
+        font_frame.pack(fill="x", padx=5, pady=2)
+
+        tk.Label(font_frame, text="フォント:", font=("Arial", 9)).pack(side="left")
+        self.pptx_vars['font_name'] = tk.StringVar(value=label_config.font_name)
+        font_entry = tk.Entry(font_frame, textvariable=self.pptx_vars['font_name'], width=12)
+        font_entry.pack(side="left", padx=(5, 0))
+
+        tk.Label(font_frame, text="サイズ:", font=("Arial", 9)).pack(side="left", padx=(10, 0))
+        self.pptx_vars['font_size'] = tk.StringVar(value=str(label_config.font_size))
+        font_size_entry = tk.Entry(font_frame, textvariable=self.pptx_vars['font_size'], width=4)
+        font_size_entry.pack(side="left", padx=(5, 0))
+
+        # Position setting
+        position_frame = tk.Frame(parent_frame)
+        position_frame.pack(fill="x", padx=5, pady=2)
+
+        tk.Label(position_frame, text="ラベル位置:", font=("Arial", 9)).pack(side="left")
+        self.pptx_vars['position'] = tk.StringVar(value=label_config.position)
+        position_combo = ttk.Combobox(
+            position_frame,
+            textvariable=self.pptx_vars['position'],
+            values=["top-left", "top-right", "bottom-left", "bottom-right"],
+            state="readonly",
+            width=12
+        )
+        position_combo.pack(side="left", padx=(5, 0))
+
+        # Save button
+        save_button = tk.Button(
+            parent_frame,
+            text="💾 設定を保存",
+            command=self._save_powerpoint_settings,
+            font=("Arial", 9)
+        )
+        save_button.pack(pady=5)
+
+    def _save_powerpoint_settings(self) -> None:
+        """Save PowerPoint label configuration."""
+        try:
+            # Get current configuration
+            config = get_app_config()
+
+            # Update PowerPoint label settings
+            config.powerpoint_label.text_color = self.pptx_vars['text_color'].get()
+            config.powerpoint_label.background_color = self.pptx_vars['background_color'].get()
+            config.powerpoint_label.border_color = self.pptx_vars['border_color'].get()
+            config.powerpoint_label.font_name = self.pptx_vars['font_name'].get()
+            config.powerpoint_label.font_size = int(self.pptx_vars['font_size'].get())
+            config.powerpoint_label.position = self.pptx_vars['position'].get()
+
+            # Validate and save configuration
+            config.powerpoint_label.validate()
+            save_app_config(config)
+
+            messagebox.showinfo("設定保存", "PowerPointラベル設定が保存されました。")
+
+        except ValueError as e:
+            if "invalid literal for int()" in str(e):
+                messagebox.showerror("設定エラー", "フォントサイズは数値で入力してください。")
+            else:
+                messagebox.showerror("設定エラー", f"設定の保存に失敗しました: {e}")
+        except UserFriendlyError as e:
+            messagebox.showerror("設定エラー", str(e))
+        except Exception as e:
+            messagebox.showerror("設定エラー", f"予期しないエラーが発生しました: {e}")
 
     def _show_error(self, error: UserFriendlyError) -> None:
         """Display error message to user."""

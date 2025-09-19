@@ -1,17 +1,36 @@
 # PDF2PNG/PDF2PPTX Converter
 
-**Version 2.0 - Refactored Architecture**
+**Version 3.0 - MVP Architecture with Compiled Executable**
 
-A robust PDF conversion tool that transforms PDF documents into PNG images or PowerPoint presentations with a user-friendly GUI interface.
+A robust PDF conversion tool that transforms PDF documents into PNG images or PowerPoint presentations with a user-friendly GUI interface. Now includes a standalone Windows executable.
 
 ## 🚀 Quick Start
 
+### **Option 1: Standalone Executable (推奨)**
 ```bash
-# 1. Install dependencies
+# Download and run directly (no Python installation required)
+dist\PDF2PNG_Converter.exe
+```
+
+### **Option 2: Python Development Environment**
+```bash
+# 1. Activate virtual environment
+venv\Scripts\Activate.ps1
+
+# 2. Install dependencies
 pip install -r requirements.txt
 
-# 2. Run the application
+# 3. Run the application
 python main.py
+```
+
+### **Option 3: UV High-Performance Build**
+```bash
+# Install UV package manager
+curl -LsSf https://astral.sh/uv/install.ps1 | powershell
+
+# Build with UV (10-100x faster)
+.\scripts\build_with_uv.ps1 -Version "3.0.0" -Clean -Test
 ```
 
 ## ✨ Features
@@ -30,7 +49,10 @@ python main.py
 PDF2PNG/
 ├── main.py                    # Main entry point for the application
 ├── requirements.txt           # Python dependencies
-├── build.spec                # PyInstaller configuration (new architecture)
+├── build_windows.spec        # PyInstaller configuration (v3.0 optimized)
+├── venv/                      # Python virtual environment
+├── dist/                      # Compiled executable output
+│   └── PDF2PNG_Converter.exe  # Standalone Windows executable (37.4MB)
 ├── PDF2PNG_仕様書.md         # Japanese specification document
 ├── REFACTORING_REPORT.md     # Detailed refactoring analysis
 ├──
@@ -102,18 +124,43 @@ from src.config import AppConfig
 
 ## 🏗️ Building Executable
 
-Create a standalone executable using PyInstaller:
-
+### **Standard PyInstaller Build**
 ```bash
 # Install PyInstaller
 pip install pyinstaller
 
-# Build executable
-pyinstaller build.spec
+# Build Windows executable
+pyinstaller build_windows.spec --clean --noconfirm
+
+# Or use FreeCAD Python (if available)
+"C:\Users\mhuser\AppData\Roaming\Python\Python311\Scripts\pyinstaller.exe" build_windows.spec --clean --noconfirm
 
 # Find executable in dist/ directory
-./dist/PDF2PPTX_Converter       # macOS/Linux
-./dist/PDF2PPTX_Converter.exe   # Windows
+./dist/PDF2PNG_Converter.exe   # Windows (37.4MB)
+```
+
+### **UV High-Performance Build (推奨)**
+```bash
+# Install UV package manager
+curl -LsSf https://astral.sh/uv/install.ps1 | powershell
+
+# Run UV-powered build script (10-100x faster)
+.\scripts\build_with_uv.ps1 -Version "3.0.0" -Clean -Test -Verbose
+```
+
+### **Manual Development Setup**
+```bash
+# Create virtual environment
+"C:\Program Files\FreeCAD 1.0\bin\python.exe" -m venv venv
+
+# Activate virtual environment
+venv\Scripts\Activate.ps1
+
+# Install dependencies
+pip install PyMuPDF python-pptx Pillow pyinstaller
+
+# Build executable
+pyinstaller build_windows.spec --clean --noconfirm
 ```
 
 ## 🧪 Testing
@@ -130,14 +177,15 @@ python -m pytest tests/ --cov=src --cov-report=html
 
 ## 🔄 Version History
 
-### Version 2.0 (Current - Refactored Architecture)
-- ✅ **Architecture**: Complete refactoring with modular design
-- ✅ **Code Quality**: Eliminated ~60% code duplication
-- ✅ **Error Handling**: Comprehensive error management system
-- ✅ **Security**: Secure path validation and resource management
-- ✅ **Testing**: Unit test coverage for core functionality
-- ✅ **Type Safety**: Full type hint annotations
-- ✅ **Documentation**: Comprehensive inline documentation
+### Version 3.0 (Current - MVP Architecture with Compiled Executable)
+- ✅ **Compiled Executable**: Standalone Windows EXE (37.4MB)
+- ✅ **MVP Architecture**: Model-View-Presenter design pattern
+- ✅ **Virtual Environment**: Integrated venv setup for development
+- ✅ **Asynchronous Processing**: Non-blocking UI operations
+- ✅ **UV Support**: High-performance package management (10-100x faster)
+- ✅ **Customizable PowerPoint**: Configurable labels with red borders
+- ✅ **Windows Optimization**: DPI awareness and modern theming
+- ✅ **Build Automation**: Comprehensive build and test scripts
 
 ### Version 1.0 (Legacy - Archived in `legacy_original/`)
 - Basic PDF to PNG/PPTX conversion functionality

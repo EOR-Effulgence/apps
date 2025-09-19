@@ -14,6 +14,86 @@ from .utils.error_handling import UserFriendlyError
 
 
 @dataclass
+class PowerPointLabelConfig:
+    """PowerPoint label styling configuration."""
+
+    # Font settings
+    font_name: str = "游ゴシック"
+    font_size: int = 18
+    font_bold: bool = True
+    text_color: str = "#FFFFFF"  # White
+
+    # Background and border settings
+    background_color: str = "#FF6600"  # Orange
+    border_color: str = "#FF0000"     # Red
+    border_width: float = 1.0
+
+    # Position and size settings
+    position: str = "top-left"  # top-left, top-right, bottom-left, bottom-right
+    width_ratio: float = 0.3    # 30% of slide width
+    height_ratio: float = 0.06  # 6% of slide height
+
+    # Shadow settings
+    enable_shadow: bool = False
+    shadow_color: str = "#808080"  # Gray
+
+    def __post_init__(self) -> None:
+        """Validate label configuration after initialization."""
+        self.validate()
+
+    def validate(self) -> None:
+        """Validate label configuration parameters."""
+        # Validate color formats
+        for color_attr in ['text_color', 'background_color', 'border_color', 'shadow_color']:
+            color_value = getattr(self, color_attr)
+            if not self._is_valid_color(color_value):
+                raise UserFriendlyError(
+                    message=f"色設定 '{color_attr}' が無効です: {color_value}",
+                    suggestion="#RRGGBB形式で指定してください（例: #FF0000）"
+                )
+
+        # Validate position
+        valid_positions = ['top-left', 'top-right', 'bottom-left', 'bottom-right']
+        if self.position not in valid_positions:
+            raise UserFriendlyError(
+                message=f"ラベル位置 '{self.position}' が無効です",
+                suggestion=f"次のいずれかを指定してください: {', '.join(valid_positions)}"
+            )
+
+        # Validate ratios
+        if not (0.01 <= self.width_ratio <= 1.0):
+            raise UserFriendlyError(
+                message="ラベル幅比率が無効です",
+                suggestion="0.01から1.0の間で設定してください"
+            )
+
+        if not (0.01 <= self.height_ratio <= 1.0):
+            raise UserFriendlyError(
+                message="ラベル高さ比率が無効です",
+                suggestion="0.01から1.0の間で設定してください"
+            )
+
+        # Validate font size
+        if not (6 <= self.font_size <= 72):
+            raise UserFriendlyError(
+                message="フォントサイズが無効です",
+                suggestion="6ptから72ptの間で設定してください"
+            )
+
+    def _is_valid_color(self, color: str) -> bool:
+        """Check if color string is valid hex format."""
+        import re
+        return bool(re.match(r'^#[0-9A-Fa-f]{6}$', color))
+
+    def to_rgb_tuple(self, color: str) -> tuple[int, int, int]:
+        """Convert hex color to RGB tuple."""
+        if not self._is_valid_color(color):
+            raise ValueError(f"Invalid color format: {color}")
+        hex_color = color.lstrip('#')
+        return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+
+
+@dataclass
 class ApplicationConfig:
     """Application-wide configuration settings."""
 
@@ -43,8 +123,14 @@ class ApplicationConfig:
     backup_existing_files: bool = False
     confirm_destructive_operations: bool = True
 
+    # PowerPoint label settings
+    powerpoint_label: PowerPointLabelConfig = None
+
     def __post_init__(self) -> None:
         """Validate configuration after initialization."""
+        # Initialize PowerPoint label config if not provided
+        if self.powerpoint_label is None:
+            self.powerpoint_label = PowerPointLabelConfig()
         self.validate()
 
     def validate(self) -> None:
@@ -89,6 +175,10 @@ class ApplicationConfig:
                 message=f"ログレベル '{self.log_level}' が無効です",
                 suggestion=f"次のいずれかを指定してください: {', '.join(valid_log_levels)}"
             )
+
+        # Validate PowerPoint label configuration
+        if self.powerpoint_label:
+            self.powerpoint_label.validate()
 
 
 @dataclass

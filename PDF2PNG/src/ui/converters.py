@@ -332,36 +332,109 @@ class PPTXConverter(BaseConverter):
         presentation: Presentation
     ) -> None:
         """
-        Add filename label to the top-left corner of the slide.
+        Add filename label to the slide using configured styling.
 
         Args:
             slide: Slide to add label to
             label_text: Text for the label
             presentation: Presentation for dimensions
         """
-        # Label dimensions (30% of slide width, 6% of slide height)
-        label_width = int(presentation.slide_width * 0.3)
-        label_height = int(presentation.slide_height * 0.06)
+        from ..config import get_app_config
+
+        config = get_app_config()
+        label_config = config.powerpoint_label
+
+        # Calculate label dimensions using configured ratios
+        label_width = int(presentation.slide_width * label_config.width_ratio)
+        label_height = int(presentation.slide_height * label_config.height_ratio)
+
+        # Calculate position based on configuration
+        left, top = self._calculate_label_position(
+            label_config.position, presentation.slide_width, presentation.slide_height,
+            label_width, label_height
+        )
 
         # Create text box
         textbox = slide.shapes.add_shape(
             MSO_AUTO_SHAPE_TYPE.RECTANGLE,
-            0, 0,  # Top-left corner
+            left, top,
             label_width,
             label_height
         )
 
-        # Style the text box
-        textbox.fill.solid()
-        textbox.fill.fore_color.rgb = RGBColor(255, 102, 0)  # Orange background
-        textbox.line.color.rgb = RGBColor(255, 0, 0)  # Red border
-        textbox.shadow.inherit = False
+        # Apply configured styling
+        self._apply_label_styling(textbox, label_config)
 
         # Set text properties
         text_frame = textbox.text_frame
         paragraph = text_frame.paragraphs[0]
         paragraph.text = label_text
-        paragraph.font.name = "游ゴシック"
-        paragraph.font.size = Pt(18)
-        paragraph.font.bold = True
-        paragraph.font.color.rgb = RGBColor(255, 255, 255)  # White text
+
+        # Apply font configuration
+        paragraph.font.name = label_config.font_name
+        paragraph.font.size = Pt(label_config.font_size)
+        paragraph.font.bold = label_config.font_bold
+
+        # Apply text color
+        text_rgb = label_config.to_rgb_tuple(label_config.text_color)
+        paragraph.font.color.rgb = RGBColor(*text_rgb)
+
+    def _calculate_label_position(
+        self,
+        position: str,
+        slide_width: int,
+        slide_height: int,
+        label_width: int,
+        label_height: int
+    ) -> tuple[int, int]:
+        """
+        Calculate label position based on configuration.
+
+        Args:
+            position: Position setting ('top-left', 'top-right', 'bottom-left', 'bottom-right')
+            slide_width: Slide width in EMU
+            slide_height: Slide height in EMU
+            label_width: Label width in EMU
+            label_height: Label height in EMU
+
+        Returns:
+            Tuple of (left, top) coordinates in EMU
+        """
+        if position == "top-left":
+            return 0, 0
+        elif position == "top-right":
+            return slide_width - label_width, 0
+        elif position == "bottom-left":
+            return 0, slide_height - label_height
+        elif position == "bottom-right":
+            return slide_width - label_width, slide_height - label_height
+        else:
+            # Default to top-left
+            return 0, 0
+
+    def _apply_label_styling(self, textbox, label_config) -> None:
+        """
+        Apply styling configuration to label textbox.
+
+        Args:
+            textbox: PowerPoint textbox shape
+            label_config: PowerPointLabelConfig instance
+        """
+        # Apply background color
+        textbox.fill.solid()
+        bg_rgb = label_config.to_rgb_tuple(label_config.background_color)
+        textbox.fill.fore_color.rgb = RGBColor(*bg_rgb)
+
+        # Apply border styling
+        border_rgb = label_config.to_rgb_tuple(label_config.border_color)
+        textbox.line.color.rgb = RGBColor(*border_rgb)
+        textbox.line.width = int(label_config.border_width * 12700)  # Convert to EMU (1pt = 12700 EMU)
+
+        # Apply shadow if enabled
+        if label_config.enable_shadow:
+            textbox.shadow.inherit = False
+            textbox.shadow.visible = True
+            shadow_rgb = label_config.to_rgb_tuple(label_config.shadow_color)
+            textbox.shadow.color.rgb = RGBColor(*shadow_rgb)
+        else:
+            textbox.shadow.inherit = False
