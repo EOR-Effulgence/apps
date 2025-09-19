@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(where python)",
+      "Bash(where python3)",
+      "Bash(where py)",
+      "Bash(python:*)",
+      "Bash(C:UsersmitsuAppDataLocalMicrosoftWindowsAppspython.exe --version)",
+      "Bash(C:UsersmitsuAppDataLocalMicrosoftWindowsAppspython.exe -m pip --version)",
+      "Bash(\"/c/Users/mitsu/AppData/Local/Microsoft/WindowsApps/python.exe\" --version)",
+      "Bash(powershell:*)",
+      "Bash(uv:*)",
+      "Bash(where uv)",
+      "Bash(git add:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
