@@ -12,7 +12,17 @@
       "Bash(uv:*)",
       "Bash(where uv)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(ruff check:*)",
+      "Bash(mypy:*)",
+      "Bash(black:*)",
+      "Bash(pip install:*)",
+      "Bash(pip --version)",
+      "Bash(\"C:\\Users\\mitsu\\AppData\\Local\\Microsoft\\WindowsApps\\python.exe\" --version)",
+      "Bash(./dist/CSV2XLSX_CLI.exe --help)",
+      "Bash(./dist/CSV2XLSX_GUI.exe)",
+      "Bash(set PYTHONPATH=G:worksappsCSV2XLSX)",
+      "Bash(set PYTHONPATH=.)"
     ],
     "deny": [],
     "ask": []

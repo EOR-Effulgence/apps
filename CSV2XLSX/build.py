@@ -51,7 +51,7 @@ block_cipher = None
 
 # GUI版の設定
 gui_a = Analysis(
-    [str(ROOT / 'src' / 'main.py')],
+    [str(ROOT / 'src' / 'app.py')],
     pathex=[str(ROOT), str(ROOT / 'src')],
     binaries=[],
     datas=[
@@ -59,10 +59,13 @@ gui_a = Analysis(
     ],
     hiddenimports=[
         'tkinterdnd2',
+        'customtkinter',
         'pandas',
         'openpyxl',
         'openpyxl.styles',
         'openpyxl.styles.stylesheet',
+        'PIL',
+        'PIL._tkinter_finder',
     ],
     hookspath=[],
     hooksconfig={},

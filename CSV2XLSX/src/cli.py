@@ -116,11 +116,11 @@ def xlsx2csv_command(args):
         encoding = args.encoding.lower()
         if encoding == 'shift-jis' or encoding == 'sjis':
             encoding = 'shift_jis'
-        elif encoding == 'utf8':
-            encoding = 'utf-8'
+        elif encoding in ['utf8', 'utf-8']:
+            encoding = 'utf-8'  # BOM付きはconverterで自動処理
 
         if encoding not in ['utf-8', 'shift_jis']:
-            logger.warning(f"不明なエンコーディング: {encoding}. UTF-8を使用します")
+            logger.warning(f"不明なエンコーディング: {encoding}. UTF-8(BOM付き)を使用します")
             encoding = 'utf-8'
 
         logger.info(f"XLSXファイルを変換中...")

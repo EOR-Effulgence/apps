@@ -16,8 +16,13 @@ from typing import List, Optional, Callable
 from src import converter
 
 # CustomTkinterの設定
-ctk.set_appearance_mode("system")
-ctk.set_default_color_theme("blue")
+ctk.set_appearance_mode("light")  # ライトモード固定
+
+# カスタムカラーテーマ（深い落ち着いた色）
+DEEP_BLUE = "#2C3E50"  # 深い青
+MEDIUM_BLUE = "#34495E"  # 中間の青
+LIGHT_GRAY = "#ECF0F1"  # 薄いグレー
+ACCENT_GREEN = "#27AE60"  # アクセント緑
 
 
 class AnimatedButton(ctk.CTkButton):
@@ -25,7 +30,7 @@ class AnimatedButton(ctk.CTkButton):
 
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
-        self.default_size = kwargs.get('width', 100), kwargs.get('height', 40)
+        self.default_size = kwargs.get('width', 120), kwargs.get('height', 50)
         self.is_animating = False
         self.bind("<Enter>", self.on_hover_enter)
         self.bind("<Leave>", self.on_hover_leave)
@@ -172,7 +177,7 @@ class CircularProgressBar(ctk.CTkCanvas):
         self.progress = 0
         self.configure(highlightthickness=0)
         self.bg_color = "#E5E5E5"
-        self.fg_color = "#3B82F6"
+        self.fg_color = ACCENT_GREEN
         self.draw()
 
     def set_progress(self, value: float):
@@ -215,9 +220,9 @@ class CSV2XLSXApp(ctk.CTk, TkinterDnD.DnDWrapper):
         self.TkdndVersion = TkinterDnD._require(self)
 
         # ウィンドウ設定
-        self.title("CSV2XLSX Converter Pro")
-        self.geometry("900x700")
-        self.minsize(800, 600)
+        self.title("CSV2XLSX 変換ツール")
+        self.geometry("650x800")
+        self.minsize(600, 450)
 
         # 状態管理
         self.file_list: List[str] = []
@@ -248,45 +253,38 @@ class CSV2XLSXApp(ctk.CTk, TkinterDnD.DnDWrapper):
 
         # タイトル
         ctk.CTkLabel(
-            header_frame, text="CSV ⇄ Excel Converter Pro",
-            font=ctk.CTkFont(size=28, weight="bold")
+            header_frame, text="CSV ⇄ Excel 変換ツール",
+            font=ctk.CTkFont(size=16, weight="bold")
         ).pack(side="left")
-
-        # テーマ切り替えボタン
-        self.theme_button = ctk.CTkButton(
-            header_frame, text="🌙", width=40, height=40,
-            font=ctk.CTkFont(size=20), command=self.toggle_theme
-        )
-        self.theme_button.pack(side="right", padx=(10, 0))
 
         # ヘルプボタン
         ctk.CTkButton(
-            header_frame, text="?", width=40, height=40,
-            font=ctk.CTkFont(size=18), command=self.show_help
-        ).pack(side="right", padx=(10, 0))
+            header_frame, text="?", width=30, height=30,
+            font=ctk.CTkFont(size=14), command=self.show_help
+        ).pack(side="right")
 
     def create_drop_area(self):
         """ドラッグ&ドロップエリアの作成"""
         drop_frame = ctk.CTkFrame(
             self.main_container, height=150, corner_radius=15,
-            border_width=2, border_color=("gray50", "gray30")
+            border_width=2, border_color="#C0C0C0"
         )
         drop_frame.pack(fill="x", pady=(0, 20))
         drop_frame.pack_propagate(False)
 
         self.drop_label = ctk.CTkLabel(
-            drop_frame, text="📁 Drag & Drop Files Here",
+            drop_frame, text="📁 ファイルをここにドラッグ&ドロップ",
             font=ctk.CTkFont(size=20)
         )
         self.drop_label.pack(expand=True, pady=(20, 10))
 
         ctk.CTkLabel(
-            drop_frame, text="CSV files → Excel | Excel file → CSV files",
-            font=ctk.CTkFont(size=14), text_color=("gray60", "gray40")
+            drop_frame, text="CSVファイル → Excel | Excelファイル → CSVファイル",
+            font=ctk.CTkFont(size=14), text_color="#666666"
         ).pack()
 
         self.browse_button = AnimatedButton(
-            drop_frame, text="Browse Files", width=150, height=35,
+            drop_frame, text="ファイルを選択", width=150, height=35,
             corner_radius=20, command=self.browse_files
         )
         self.browse_button.pack(pady=(10, 20))
@@ -303,18 +301,18 @@ class CSV2XLSXApp(ctk.CTk, TkinterDnD.DnDWrapper):
         list_frame.pack(fill="both", expand=True, pady=(0, 20))
 
         ctk.CTkLabel(
-            list_frame, text="Files to Convert",
+            list_frame, text="変換するファイル",
             font=ctk.CTkFont(size=16, weight="bold")
         ).pack(anchor="w", pady=(0, 10))
 
         self.file_scroll_frame = ctk.CTkScrollableFrame(
-            list_frame, height=200, corner_radius=10
+            list_frame, height=180, corner_radius=10
         )
         self.file_scroll_frame.pack(fill="both", expand=True)
 
         self.empty_list_label = ctk.CTkLabel(
-            self.file_scroll_frame, text="No files selected",
-            font=ctk.CTkFont(size=14), text_color=("gray60", "gray40")
+            self.file_scroll_frame, text="ファイルが選択されていません",
+            font=ctk.CTkFont(size=14), text_color="#888888"
         )
         self.empty_list_label.pack(pady=50)
 
@@ -327,7 +325,7 @@ class CSV2XLSXApp(ctk.CTk, TkinterDnD.DnDWrapper):
         options_frame.pack_propagate(False)
 
         ctk.CTkLabel(
-            options_frame, text="Options",
+            options_frame, text="オプション",
             font=ctk.CTkFont(size=16, weight="bold")
         ).pack(anchor="w", padx=20, pady=(15, 10))
 
@@ -336,28 +334,30 @@ class CSV2XLSXApp(ctk.CTk, TkinterDnD.DnDWrapper):
 
         # エンコーディング選択
         ctk.CTkLabel(
-            options_content, text="Output Encoding (Excel→CSV):",
+            options_content, text="出力エンコーディング (Excel→CSV):",
             font=ctk.CTkFont(size=14)
         ).pack(side="left", padx=(0, 10))
 
-        self.encoding_var = ctk.StringVar(value="UTF-8")
+        self.encoding_var = ctk.StringVar(value="UTF-8 (BOM付き)")
         self.encoding_menu = ctk.CTkOptionMenu(
-            options_content, values=["UTF-8", "Shift_JIS"],
-            variable=self.encoding_var, width=150, height=35, corner_radius=8
+            options_content, values=["UTF-8 (BOM付き)", "Shift_JIS"],
+            variable=self.encoding_var, width=180, height=35, corner_radius=8,
+            fg_color=MEDIUM_BLUE, button_color=DEEP_BLUE, button_hover_color=MEDIUM_BLUE
         )
         self.encoding_menu.pack(side="left")
 
         # 出力フォルダ選択
         self.output_folder_button = ctk.CTkButton(
-            options_content, text="📂 Choose Output Folder",
-            width=150, height=35, command=self.choose_output_folder
+            options_content, text="📂 出力フォルダを選択",
+            width=150, height=35, command=self.choose_output_folder,
+            fg_color=MEDIUM_BLUE, hover_color=DEEP_BLUE
         )
         self.output_folder_button.pack(side="left", padx=(20, 0))
 
-        self.output_folder_path = ctk.StringVar(value="Same as input files")
+        self.output_folder_path = ctk.StringVar(value="入力ファイルと同じフォルダ")
         self.output_info_label = ctk.CTkLabel(
             options_content, textvariable=self.output_folder_path,
-            font=ctk.CTkFont(size=12), text_color=("gray60", "gray40")
+            font=ctk.CTkFont(size=12), text_color="#777777"
         )
         self.output_info_label.pack(side="right", padx=(20, 0))
 
@@ -366,11 +366,12 @@ class CSV2XLSXApp(ctk.CTk, TkinterDnD.DnDWrapper):
         action_frame = ctk.CTkFrame(self.main_container, fg_color="transparent")
         action_frame.pack(fill="x", pady=(0, 10))
 
-        # 変換ボタン
-        self.convert_button = AnimatedButton(
-            action_frame, text="🚀 Convert Files",
-            font=ctk.CTkFont(size=18, weight="bold"),
-            height=50, width=300, corner_radius=25, command=self.start_conversion
+        # 変換ボタン（深い色でカスタマイズ）
+        self.convert_button = ctk.CTkButton(
+            action_frame, text="ファイルを変換",
+            font=ctk.CTkFont(size=16, weight="bold"),
+            height=45, corner_radius=12, command=self.start_conversion,
+            fg_color=DEEP_BLUE, hover_color=MEDIUM_BLUE
         )
         self.convert_button.pack(fill="x")
 
@@ -399,7 +400,7 @@ class CSV2XLSXApp(ctk.CTk, TkinterDnD.DnDWrapper):
         self.status_frame.pack(fill="x", side="bottom")
 
         self.status_label = ctk.CTkLabel(
-            self.status_frame, text="Ready", font=ctk.CTkFont(size=12), anchor="w"
+            self.status_frame, text="準備完了", font=ctk.CTkFont(size=12), anchor="w"
         )
         self.status_label.pack(side="left", padx=10)
 
@@ -409,7 +410,7 @@ class CSV2XLSXApp(ctk.CTk, TkinterDnD.DnDWrapper):
 
     def choose_output_folder(self):
         """出力フォルダ選択"""
-        folder = filedialog.askdirectory(title="Select Output Folder")
+        folder = filedialog.askdirectory(title="出力フォルダを選択")
         if folder:
             self.output_folder_path.set(folder)
 
@@ -417,25 +418,25 @@ class CSV2XLSXApp(ctk.CTk, TkinterDnD.DnDWrapper):
         """ファイルドロップ時の処理"""
         files = self.tk.splitlist(event.data)
         self.drop_label.configure(
-            text="✅ Files Added!", text_color=("#10B981", "#34D399")
+            text="✅ ファイルが追加されました！", text_color="#10B981"
         )
         self.after(1000, lambda: self.drop_label.configure(
-            text="📁 Drag & Drop Files Here", text_color=("black", "white")
+            text="📁 ファイルをここにドラッグ&ドロップ", text_color="black"
         ))
         self.add_files(files)
 
     def on_drop_hover(self, widget, entering):
         """ドロップエリアのホバーエフェクト"""
         if entering:
-            widget.configure(border_color=("#3B82F6", "#60A5FA"), border_width=3)
+            widget.configure(border_color="#3B82F6", border_width=3)
             self.drop_label.configure(
-                text="📂 Drop Files Now!", text_color=("#3B82F6", "#60A5FA")
+                text="📂 今すぐファイルをドロップ！", text_color="#3B82F6"
             )
             self.start_pulse_animation(widget)
         else:
-            widget.configure(border_color=("gray50", "gray30"), border_width=2)
+            widget.configure(border_color="#C0C0C0", border_width=2)
             self.drop_label.configure(
-                text="📁 Drag & Drop Files Here", text_color=("black", "white")
+                text="📁 ファイルをここにドラッグ&ドロップ", text_color="black"
             )
             self.stop_pulse_animation()
 
@@ -466,12 +467,12 @@ class CSV2XLSXApp(ctk.CTk, TkinterDnD.DnDWrapper):
     def browse_files(self):
         """ファイル選択ダイアログ"""
         filetypes = (
-            ("Supported files", "*.csv *.xlsx"),
-            ("CSV files", "*.csv"),
-            ("Excel files", "*.xlsx"),
-            ("All files", "*.*")
+            ("サポートされているファイル", "*.csv *.xlsx"),
+            ("CSVファイル", "*.csv"),
+            ("Excelファイル", "*.xlsx"),
+            ("すべてのファイル", "*.*")
         )
-        files = filedialog.askopenfilenames(title="Select files", filetypes=filetypes)
+        files = filedialog.askopenfilenames(title="ファイルを選択", filetypes=filetypes)
         if files:
             self.add_files(files)
 
@@ -488,14 +489,14 @@ class CSV2XLSXApp(ctk.CTk, TkinterDnD.DnDWrapper):
                 self.conversion_mode = "xlsx_to_csv"
                 self.file_list = xlsx_files
             else:
-                self.show_error("Please select only one Excel file for conversion to CSV.")
+                self.show_error("CSV変換用にはExcelファイルを1つだけ選択してください。")
                 return
         else:
-            self.show_error("Please select either CSV files or one Excel file, not both.")
+            self.show_error("CSVファイルまたはExcelファイル（1つ）のいずれかを選択してください。両方は選択できません。")
             return
 
         self.update_file_list_ui()
-        self.update_status(f"Added {len(self.file_list)} file(s)")
+        self.update_status(f"{len(self.file_list)}個のファイルを追加しました")
 
     def update_file_list_ui(self):
         """ファイルリストUIの更新"""
@@ -537,7 +538,7 @@ class CSV2XLSXApp(ctk.CTk, TkinterDnD.DnDWrapper):
 
         ctk.CTkLabel(
             text_frame, text=filesize, font=ctk.CTkFont(size=12),
-            text_color=("gray60", "gray40"), anchor="w"
+            text_color="#777777", anchor="w"
         ).pack(anchor="w")
 
         # 削除ボタン
@@ -570,43 +571,38 @@ class CSV2XLSXApp(ctk.CTk, TkinterDnD.DnDWrapper):
         """空リストラベル作成"""
         if not self.empty_list_label:
             self.empty_list_label = ctk.CTkLabel(
-                self.file_scroll_frame, text="No files selected",
-                font=ctk.CTkFont(size=14), text_color=("gray60", "gray40")
+                self.file_scroll_frame, text="ファイルが選択されていません",
+                font=ctk.CTkFont(size=14), text_color="#888888"
             )
             self.empty_list_label.pack(pady=50)
 
-    def toggle_theme(self):
-        """テーマ切り替え"""
-        current_mode = ctk.get_appearance_mode()
-        if current_mode == "Dark":
-            ctk.set_appearance_mode("light")
-            self.theme_button.configure(text="☀️")
-        else:
-            ctk.set_appearance_mode("dark")
-            self.theme_button.configure(text="🌙")
-
     def show_help(self):
         """ヘルプ表示"""
-        help_text = """CSV2XLSX Converter Pro v2.0
+        help_text = """CSV2XLSX 変換ツール v2.1
 
-How to use:
-1. Drag & drop files or click 'Browse Files'
-2. Select conversion options if needed
-3. Click 'Convert Files' to start
+使用方法:
+1. ファイルをドラッグ&ドロップまたは「ファイルを選択」ボタンをクリック
+2. 必要に応じて変換オプションを選択
+3. 「🚀 ファイルを変換」ボタンをクリックして開始
 
-Supported conversions:
-• Multiple CSV → Single Excel (multiple sheets)
-• Single Excel → Multiple CSV files
+サポートされている変換:
+• 複数CSV → 単一Excel（複数シート）
+• 単一Excel → 複数CSVファイル
 
-Encoding options:
-• UTF-8 (recommended)
-• Shift_JIS (for Japanese Windows compatibility)"""
-        messagebox.showinfo("Help", help_text)
+エンコーディングオプション:
+• UTF-8 (BOM付き) - 推奨、Excel互換
+• Shift_JIS - 日本語Windows互換
+
+その他の機能:
+• 📂 出力フォルダ選択
+• ⚡ リアルタイム進捗表示
+• 🎨 見やすいライトモードデザイン"""
+        messagebox.showinfo("ヘルプ", help_text)
 
     def start_conversion(self):
         """変換開始"""
         if not self.file_list:
-            self.show_error("Please select files to convert.")
+            self.show_error("変換するファイルを選択してください。")
             return
 
         self.set_ui_state(False)
@@ -619,7 +615,7 @@ Encoding options:
         try:
             if self.conversion_mode == "csv_to_xlsx":
                 output_folder = self.output_folder_path.get()
-                if output_folder == "Same as input files":
+                if output_folder == "入力ファイルと同じフォルダ":
                     output_file = os.path.splitext(self.file_list[0])[0] + ".xlsx"
                 else:
                     filename = os.path.splitext(os.path.basename(self.file_list[0]))[0] + ".xlsx"
@@ -628,25 +624,29 @@ Encoding options:
                 converter.csv_to_xlsx(
                     self.file_list, output_file, progress_callback=self.update_progress
                 )
-                self.show_success(f"Successfully created: {os.path.basename(output_file)}")
+                self.show_success(f"変換完了: {os.path.basename(output_file)}")
 
             elif self.conversion_mode == "xlsx_to_csv":
                 input_file = self.file_list[0]
                 output_folder = self.output_folder_path.get()
-                if output_folder == "Same as input files":
+                if output_folder == "入力ファイルと同じフォルダ":
                     output_dir = os.path.dirname(input_file)
                 else:
                     output_dir = output_folder
 
-                encoding = self.encoding_var.get().lower().replace('_', '-')
+                encoding_choice = self.encoding_var.get()
+                if "UTF-8" in encoding_choice:
+                    encoding = 'utf-8'  # BOM付きはconverterで自動処理
+                else:
+                    encoding = 'shift_jis'
                 converter.xlsx_to_csv(
                     input_file, output_dir, encoding=encoding,
                     progress_callback=self.update_progress
                 )
-                self.show_success(f"CSV files created in: {output_dir}")
+                self.show_success(f"CSVファイルを作成しました: {output_dir}")
 
         except Exception as e:
-            self.show_error(f"Conversion failed: {str(e)}")
+            self.show_error(f"変換に失敗しました: {str(e)}")
         finally:
             self.after(0, lambda: self.set_ui_state(True))
             self.after(0, lambda: self.progress_frame.pack_forget())
@@ -659,7 +659,7 @@ Encoding options:
             self.progress_bar.set(progress)
             self.circular_progress.set_progress(progress)
             self.progress_label.configure(
-                text=f"Processing: {current}/{total} ({int(progress * 100)}%)"
+                text=f"処理中: {current}/{total} ({int(progress * 100)}%)"
             )
 
         self.after(0, update_ui)
