@@ -118,18 +118,47 @@ assets_dir = PROJECT_ROOT / "assets"
 if assets_dir.exists():
     DATA_FILES.append((str(assets_dir), "assets"))
 
-# Add Tcl/Tk data files if available (commented out due to FreeCAD environment issues)
-# import tkinter
-# tk_root = tkinter.Tk()
-# tk_root.withdraw()  # Hide the window
-# tcl_dir = tk_root.tk.exprstring('$tcl_library')
-# tk_dir = tk_root.tk.exprstring('$tk_library')
-# tk_root.destroy()
+# Add Tcl/Tk data files - Fixed for FreeCAD environment
+try:
+    import tkinter
+    import os
 
-# if os.path.exists(tcl_dir):
-#     DATA_FILES.append((tcl_dir, '_tcl_data'))
-# if os.path.exists(tk_dir):
-#     DATA_FILES.append((tk_dir, '_tk_data'))
+    # Get Python installation directory from FreeCAD
+    python_dir = r"C:\Program Files\FreeCAD 1.0\bin"
+    tcl_dir = os.path.join(python_dir, "tcl", "tcl8.6")
+    tk_dir = os.path.join(python_dir, "tcl", "tk8.6")
+
+    # Alternative paths to check
+    alt_tcl_dirs = [
+        os.path.join(python_dir, "lib", "tcl8.6"),
+        os.path.join(python_dir, "lib", "tk8.6"),
+        os.path.join(python_dir, "DLLs", "tcl86t.dll"),
+        os.path.join(python_dir, "DLLs", "tk86t.dll"),
+    ]
+
+    # Find working Tcl/Tk directories
+    for check_dir in [tcl_dir, tk_dir] + alt_tcl_dirs:
+        if os.path.exists(check_dir):
+            if "tcl" in check_dir.lower():
+                DATA_FILES.append((check_dir, "_tcl_data"))
+            elif "tk" in check_dir.lower():
+                DATA_FILES.append((check_dir, "_tk_data"))
+
+except Exception as e:
+    print(f"Warning: Could not locate Tcl/Tk data: {e}")
+
+# Manual fallback - add DLL files from FreeCAD bin directory
+python_dir = r"C:\Program Files\FreeCAD 1.0\bin"
+dll_files = [
+    os.path.join(python_dir, "tcl86t.dll"),
+    os.path.join(python_dir, "tk86t.dll"),
+    os.path.join(python_dir, "DLLs", "_tkinter.pyd"),
+]
+
+for dll_file in dll_files:
+    if os.path.exists(dll_file):
+        DATA_FILES.append((dll_file, "."))
+        print(f"Added Tkinter DLL: {dll_file}")
 
 # Modules to exclude (reduce size)
 EXCLUDES = [
@@ -210,12 +239,16 @@ EXCLUDES = [
 a = Analysis(
     ['main.py'],
     pathex=[str(PROJECT_ROOT), str(SRC_PATH)],
-    binaries=[],
+    binaries=[
+        # Tkinter DLLs for proper GUI functionality
+        (r"C:\Program Files\FreeCAD 1.0\bin\tcl86t.dll", "."),
+        (r"C:\Program Files\FreeCAD 1.0\bin\tk86t.dll", "."),
+    ],
     datas=DATA_FILES,
     hiddenimports=HIDDEN_IMPORTS,
     hookspath=[],
     hooksconfig={},
-    runtime_hooks=[],
+    runtime_hooks=[str(PROJECT_ROOT / 'runtime_hook_tkinter.py')],
     excludes=EXCLUDES,
     noarchive=False,
     optimize=2,  # Maximum bytecode optimization

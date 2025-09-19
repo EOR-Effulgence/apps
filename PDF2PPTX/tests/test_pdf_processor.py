@@ -174,12 +174,16 @@ class TestFileOperations:
         """Test counting pages across multiple PDFs."""
         from src.core.pdf_processor import count_total_pages
 
-        # Mock PDF documents with different page counts
-        mock_doc1 = Mock()
+        # Mock PDF documents with different page counts and context manager support
+        mock_doc1 = MagicMock()
         mock_doc1.__len__ = Mock(return_value=5)
+        mock_doc1.__enter__ = Mock(return_value=mock_doc1)
+        mock_doc1.__exit__ = Mock(return_value=None)
 
-        mock_doc2 = Mock()
+        mock_doc2 = MagicMock()
         mock_doc2.__len__ = Mock(return_value=3)
+        mock_doc2.__enter__ = Mock(return_value=mock_doc2)
+        mock_doc2.__exit__ = Mock(return_value=None)
 
         mock_open_pdf.side_effect = [
             mock_doc1,

@@ -11,7 +11,11 @@ from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Dict, Any, Optional
 
-from .utils.error_handling import UserFriendlyError
+try:
+    from .utils.error_handling import UserFriendlyError
+except ImportError:
+    # Fallback for direct execution
+    from utils.error_handling import UserFriendlyError
 
 
 @dataclass
@@ -295,10 +299,18 @@ class ConfigManager:
             default_config = ApplicationConfig()
             default_dict = asdict(default_config)
 
-            # Update defaults with loaded values
+            # Update defaults with loaded values recursively
             for key, value in data.items():
                 if key in default_dict:
-                    default_dict[key] = value
+                    if isinstance(value, dict) and isinstance(default_dict[key], dict):
+                        # Recursively update nested dictionaries
+                        default_dict[key].update(value)
+                    else:
+                        default_dict[key] = value
+
+            # Convert nested dictionaries to proper dataclass instances
+            if 'powerpoint_label' in default_dict and isinstance(default_dict['powerpoint_label'], dict):
+                default_dict['powerpoint_label'] = PowerPointLabelConfig(**default_dict['powerpoint_label'])
 
             return ApplicationConfig(**default_dict)
 
