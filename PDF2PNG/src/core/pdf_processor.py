@@ -45,6 +45,52 @@ class PDFProcessingError(Exception):
     pass
 
 
+class PDFProcessor:
+    """High-level PDF processing interface."""
+
+    def __init__(self, config: Optional[ConversionConfig] = None):
+        """Initialize processor with configuration."""
+        self.config = config or ConversionConfig()
+
+    def convert_to_images(self, pdf_path: Path, output_dir: Path) -> bool:
+        """Convert PDF to PNG images."""
+        try:
+            return convert_pdf_to_images(pdf_path, output_dir, self.config)
+        except Exception as e:
+            raise PDFProcessingError(f"Failed to convert {pdf_path} to images: {e}")
+
+    def convert_to_powerpoint(self, pdf_path: Path, output_dir: Path) -> bool:
+        """Convert PDF to PowerPoint presentation."""
+        try:
+            return convert_pdf_to_powerpoint(pdf_path, output_dir, self.config)
+        except Exception as e:
+            raise PDFProcessingError(f"Failed to convert {pdf_path} to PowerPoint: {e}")
+
+    def get_pdf_info(self, pdf_path: Path) -> dict:
+        """Get information about PDF file."""
+        try:
+            with open_pdf_document(pdf_path) as doc:
+                return {
+                    'page_count': len(doc),
+                    'title': doc.metadata.get('title', ''),
+                    'author': doc.metadata.get('author', ''),
+                    'subject': doc.metadata.get('subject', ''),
+                    'creator': doc.metadata.get('creator', ''),
+                    'pages': [
+                        PageInfo(
+                            page_number=i + 1,
+                            original_size=(page.rect.width, page.rect.height),
+                            is_portrait=page.rect.width < page.rect.height,
+                            was_rotated=False,
+                            final_size=(page.rect.width, page.rect.height)
+                        )
+                        for i, page in enumerate(doc)
+                    ]
+                }
+        except Exception as e:
+            raise PDFProcessingError(f"Failed to get PDF info: {e}")
+
+
 @contextmanager
 def open_pdf_document(file_path: Path) -> Generator[fitz.Document, None, None]:
     """

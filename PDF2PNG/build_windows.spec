@@ -48,6 +48,7 @@ HIDDEN_IMPORTS = [
     'tkinter.ttk',
     'tkinter.font',
     'tkinter.colorchooser',
+    '_tkinter',  # Low-level tkinter support
 
     # PDF processing core
     'fitz',  # PyMuPDF
@@ -97,6 +98,7 @@ HIDDEN_IMPORTS = [
     'logging.handlers',
     'enum',
     'weakref',
+    'socket',  # Required for multiprocessing
 
     # Windows integration
     'subprocess',
@@ -115,6 +117,19 @@ DATA_FILES = [
 assets_dir = PROJECT_ROOT / "assets"
 if assets_dir.exists():
     DATA_FILES.append((str(assets_dir), "assets"))
+
+# Add Tcl/Tk data files if available (commented out due to FreeCAD environment issues)
+# import tkinter
+# tk_root = tkinter.Tk()
+# tk_root.withdraw()  # Hide the window
+# tcl_dir = tk_root.tk.exprstring('$tcl_library')
+# tk_dir = tk_root.tk.exprstring('$tk_library')
+# tk_root.destroy()
+
+# if os.path.exists(tcl_dir):
+#     DATA_FILES.append((tcl_dir, '_tcl_data'))
+# if os.path.exists(tk_dir):
+#     DATA_FILES.append((tk_dir, '_tk_data'))
 
 # Modules to exclude (reduce size)
 EXCLUDES = [
@@ -158,8 +173,7 @@ EXCLUDES = [
     'psycopg2',
     'pymongo',
 
-    # Network libraries
-    'socket',
+    # Network libraries (excluding socket - needed for multiprocessing)
     'http.server',
     'http.client',
     'xmlrpc',

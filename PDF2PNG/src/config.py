@@ -6,6 +6,7 @@ Provides default settings and validation for all conversion operations.
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Dict, Any, Optional
@@ -82,7 +83,6 @@ class PowerPointLabelConfig:
 
     def _is_valid_color(self, color: str) -> bool:
         """Check if color string is valid hex format."""
-        import re
         return bool(re.match(r'^#[0-9A-Fa-f]{6}$', color))
 
     def to_rgb_tuple(self, color: str) -> tuple[int, int, int]:

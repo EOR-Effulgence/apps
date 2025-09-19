@@ -184,7 +184,7 @@ async def main_async() -> int:
 
     try:
         # Import GUI components
-        from src.ui.main_window_v3 import ModernMainWindow
+        from src.ui.main_window import MainWindow
         from src.application.services.conversion_service import ConversionService
         from src.presentation.presenters.main_presenter import MainPresenter
         from src.utils.path_utils import PathManager
@@ -200,7 +200,7 @@ async def main_async() -> int:
         conversion_service = ConversionService(path_manager)
 
         # Create and run GUI application
-        app = ModernMainWindow()
+        app = MainWindow()
         presenter = MainPresenter(app, conversion_service)
 
         # Initialize presenter
