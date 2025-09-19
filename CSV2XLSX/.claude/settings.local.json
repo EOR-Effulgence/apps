@@ -22,7 +22,8 @@
       "Bash(./dist/CSV2XLSX_CLI.exe --help)",
       "Bash(./dist/CSV2XLSX_GUI.exe)",
       "Bash(set PYTHONPATH=G:worksappsCSV2XLSX)",
-      "Bash(set PYTHONPATH=.)"
+      "Bash(set PYTHONPATH=.)",
+      "Bash(dir dist)"
     ],
     "deny": [],
     "ask": []
