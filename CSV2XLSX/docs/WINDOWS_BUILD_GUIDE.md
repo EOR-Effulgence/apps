@@ -107,7 +107,7 @@ dist/
 │   ├── README.txt           # 使用方法
 │   ├── GUI起動.bat          # GUI版起動スクリプト
 │   └── CLI使用例.bat        # CLI使用例
-└── CSV2XLSX_IC_v1.0.0_Windows.zip  # 配布用パッケージ
+└── CSV2XLSX_IC_v2.1.0_Windows.zip  # 配布用パッケージ
 ```
 
 #### 動作確認

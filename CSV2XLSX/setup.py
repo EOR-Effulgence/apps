@@ -17,7 +17,7 @@ if os.path.exists('README.md'):
 
 setup(
     name='csv2xlsx_ic',
-    version='1.0.0',
+    version='2.1.0',
     author='CSV2XLSX Development Team',
     description='CSVファイルとExcelファイルの相互変換ツール',
     long_description=long_description,

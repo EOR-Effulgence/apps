@@ -210,7 +210,7 @@ def create_distribution():
         print(f"Created {filename}")
 
     # ZIPファイルの作成
-    zip_name = 'CSV2XLSX_IC_v1.0.0_Windows'
+    zip_name = 'CSV2XLSX_IC_v2.1.0_Windows'
     shutil.make_archive(
         str(dist_dir / zip_name),
         'zip',
@@ -245,7 +245,7 @@ def main():
 
     print("\n" + "=" * 50)
     print("Build completed successfully!")
-    print("Distribution package: dist/CSV2XLSX_IC_v1.0.0_Windows.zip")
+    print("Distribution package: dist/CSV2XLSX_IC_v2.1.0_Windows.zip")
 
 
 if __name__ == '__main__':
