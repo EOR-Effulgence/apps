@@ -80,12 +80,18 @@ class PDFProcessor:
             from .powerpoint_converter import PowerPointConversionService
             service = PowerPointConversionService(config)
 
+            # Use the first PDF file's name for the output PowerPoint
+            if files:
+                first_pdf_name = files[0].stem
+                output_filename = f"{first_pdf_name}.pptx"
+                output_path = path_manager.output_dir / output_filename
+            else:
+                output_path = path_manager.output_dir / "presentation.pptx"
+
             if len(files) == 1:
-                output_dir = path_manager.output_dir
-                return service.convert_pdf_to_powerpoint(files[0], output_dir)
+                return service.convert_pdf_to_powerpoint(files[0], path_manager.output_dir, output_filename)
             else:
                 # Multiple files to single presentation
-                output_path = path_manager.output_dir / f"merged_presentation.pptx"
                 return service.convert_multiple_pdfs_to_single_presentation(files, output_path)
         except Exception as e:
             raise PDFProcessingError(f"Failed to convert PDFs to PowerPoint: {e}")
@@ -202,11 +208,15 @@ def process_page_to_pixmap(
         # Determine rotation
         rotation = 90 if (config.auto_rotate and is_portrait) else 0
 
-        # Create transformation matrix
-        matrix = fitz.Matrix(config.scale_factor, config.scale_factor)
+        # Create transformation matrix with rotation
+        if rotation == 90:
+            # Rotate 90 degrees: apply rotation to matrix
+            matrix = fitz.Matrix(config.scale_factor, config.scale_factor) * fitz.Matrix(90)
+        else:
+            matrix = fitz.Matrix(config.scale_factor, config.scale_factor)
 
         # Generate pixmap with scaling and rotation
-        pixmap = page.get_pixmap(matrix=matrix, rotate=rotation)
+        pixmap = page.get_pixmap(matrix=matrix)
 
         # Calculate final size after rotation
         if rotation == 90:

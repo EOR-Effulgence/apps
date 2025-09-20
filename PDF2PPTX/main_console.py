@@ -65,10 +65,11 @@ def test_mode():
 def convert_pdf(input_path: str, output_dir: str, format_type: str):
     """Convert PDF using core functionality."""
     try:
-        from src.core.pdf_processor import PDFProcessor
-        from src.config import AppConfig
+        from src.core.pdf_processor import PDFProcessor, ConversionConfig
+        from src.config import get_app_config
 
-        config = AppConfig()
+        app_config = get_app_config()
+        config = ConversionConfig()
         processor = PDFProcessor(config)
 
         input_file = Path(input_path)

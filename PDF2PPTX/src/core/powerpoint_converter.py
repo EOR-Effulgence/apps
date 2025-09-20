@@ -40,13 +40,14 @@ class PowerPointConversionService(ConversionService):
         """Set callback function for progress updates."""
         self.progress_callback = callback
 
-    def convert_pdf_to_powerpoint(self, pdf_path: Path, output_dir: Path) -> Path:
+    def convert_pdf_to_powerpoint(self, pdf_path: Path, output_dir: Path, output_filename: str = None) -> Path:
         """
         Convert a single PDF file to PowerPoint presentation.
 
         Args:
             pdf_path: Path to PDF file
             output_dir: Directory to save PPTX file
+            output_filename: Optional custom filename for output
 
         Returns:
             Path to generated PPTX file
@@ -66,8 +67,9 @@ class PowerPointConversionService(ConversionService):
             # Process PDF pages
             self._add_pdf_to_presentation(pdf_path, presentation)
 
-            # Save presentation
-            output_filename = f"{pdf_path.stem}.pptx"
+            # Save presentation with custom filename if provided
+            if output_filename is None:
+                output_filename = f"{pdf_path.stem}.pptx"
             output_path = output_dir / output_filename
             presentation.save(str(output_path))
 
