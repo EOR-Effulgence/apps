@@ -6,7 +6,10 @@
       "Bash(python:*)",
       "Bash(mkdir:*)",
       "Bash(uv:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(.venvScriptspython.exe test_core_functions.py)",
+      "Bash(.venv\\Scripts\\python.exe test_core.py:*)",
+      "Bash(.venv/Scripts/python.exe test_core.py:*)"
     ],
     "deny": [],
     "ask": []
