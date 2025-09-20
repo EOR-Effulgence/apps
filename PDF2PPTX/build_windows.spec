@@ -121,7 +121,7 @@ HIDDEN_IMPORTS = [
 DATA_FILES = [
     # Configuration files
     (str(PROJECT_ROOT / "README.md"), "."),
-    (str(PROJECT_ROOT / "PDF2PNG_仕様書.md"), "."),
+    (str(PROJECT_ROOT / "PDF2PPTX_統合仕様書.md"), "."),
 ]
 
 # Virtual environment will provide Tkinter libraries automatically

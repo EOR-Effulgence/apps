@@ -19,7 +19,7 @@ a = Analysis(
     binaries=[],
     datas=[
         (str(PROJECT_ROOT / "README.md"), "."),
-        (str(PROJECT_ROOT / "PDF2PNG_仕様書.md"), "."),
+        (str(PROJECT_ROOT / "PDF2PPTX_統合仕様書.md"), "."),
     ],
     hiddenimports=[
         # Core modules without Tkinter
