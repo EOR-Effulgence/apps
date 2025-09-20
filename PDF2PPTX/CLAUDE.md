@@ -3,7 +3,7 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## natural-language
- japanese: true
+ 日本語で回答して
 
 ## Project Overview
 
