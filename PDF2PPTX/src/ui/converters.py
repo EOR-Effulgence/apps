@@ -187,13 +187,13 @@ class PPTXConverter(BaseConverter):
 
     def _create_presentation(self, config: ConversionConfig) -> Presentation:
         """
-        Create a new PowerPoint presentation with A3 landscape dimensions.
+        Create a new PowerPoint presentation with A3 landscape dimensions and red theme.
 
         Args:
             config: Conversion configuration
 
         Returns:
-            Configured presentation object
+            Configured presentation object with red theme applied
         """
         presentation = Presentation()
 
@@ -201,7 +201,70 @@ class PPTXConverter(BaseConverter):
         presentation.slide_width = mm_to_emu(config.slide_width_mm)
         presentation.slide_height = mm_to_emu(config.slide_height_mm)
 
+        # Apply red theme settings
+        self._apply_red_theme(presentation)
+
         return presentation
+
+    def _apply_red_theme(self, presentation: Presentation) -> None:
+        """
+        Apply red theme settings to PowerPoint presentation.
+
+        Sets default styles for:
+        - Lines: Red color
+        - Text: Red color
+        - Shape backgrounds: Transparent
+        - Shape borders: Red color
+
+        Args:
+            presentation: PowerPoint presentation to apply theme to
+        """
+        try:
+            # Get slide master for theme modifications
+            slide_master = presentation.slide_master
+
+            # Define red color (RGB: 255, 0, 0)
+            red_color = RGBColor(255, 0, 0)
+
+            # Apply theme to slide master layouts
+            for layout in slide_master.slide_layouts:
+                # Set default text color for all placeholders
+                for placeholder in layout.placeholders:
+                    if hasattr(placeholder, 'text_frame'):
+                        text_frame = placeholder.text_frame
+                        if hasattr(text_frame, 'paragraphs'):
+                            for paragraph in text_frame.paragraphs:
+                                for run in paragraph.runs:
+                                    run.font.color.rgb = red_color
+
+                # Set default shape styles for layout shapes
+                for shape in layout.shapes:
+                    # Set line color to red
+                    if hasattr(shape, 'line'):
+                        shape.line.color.rgb = red_color
+
+                    # Set fill to no fill (transparent background)
+                    if hasattr(shape, 'fill'):
+                        shape.fill.background()
+
+                    # Set text color to red
+                    if hasattr(shape, 'text_frame'):
+                        text_frame = shape.text_frame
+                        if hasattr(text_frame, 'paragraphs'):
+                            for paragraph in text_frame.paragraphs:
+                                for run in paragraph.runs:
+                                    run.font.color.rgb = red_color
+
+            # Set theme colors in color scheme if accessible
+            if hasattr(presentation, 'core_properties'):
+                # PowerPoint theme color customization would go here
+                # Note: python-pptx has limited access to theme color modification
+                pass
+
+        except Exception as e:
+            # Log theme application error but don't fail the presentation creation
+            print(f"Warning: Could not fully apply red theme: {e}")
+            pass
 
     def _add_pdf_to_presentation(
         self,
@@ -375,9 +438,9 @@ class PPTXConverter(BaseConverter):
         paragraph.font.size = Pt(label_config.font_size)
         paragraph.font.bold = label_config.font_bold
 
-        # Apply text color
-        text_rgb = label_config.to_rgb_tuple(label_config.text_color)
-        paragraph.font.color.rgb = RGBColor(*text_rgb)
+        # Apply red theme text color (override config setting)
+        red_color = RGBColor(255, 0, 0)
+        paragraph.font.color.rgb = red_color
 
     def _calculate_label_position(
         self,
@@ -414,23 +477,21 @@ class PPTXConverter(BaseConverter):
 
     def _apply_label_styling(self, textbox, label_config) -> None:
         """
-        Apply styling configuration to label textbox.
+        Apply red theme styling to label textbox.
 
         Args:
             textbox: PowerPoint textbox shape
             label_config: PowerPointLabelConfig instance
         """
-        # Apply background color
-        textbox.fill.solid()
-        bg_rgb = label_config.to_rgb_tuple(label_config.background_color)
-        textbox.fill.fore_color.rgb = RGBColor(*bg_rgb)
+        # Apply red theme: transparent background
+        textbox.fill.background()
 
-        # Apply border styling
-        border_rgb = label_config.to_rgb_tuple(label_config.border_color)
-        textbox.line.color.rgb = RGBColor(*border_rgb)
+        # Apply red theme: red border
+        red_color = RGBColor(255, 0, 0)
+        textbox.line.color.rgb = red_color
         textbox.line.width = int(label_config.border_width * 12700)  # Convert to EMU (1pt = 12700 EMU)
 
-        # Apply shadow if enabled
+        # Apply shadow if enabled (keep original shadow settings)
         if label_config.enable_shadow:
             textbox.shadow.inherit = False
             textbox.shadow.visible = True

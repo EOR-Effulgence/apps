@@ -157,25 +157,21 @@ try:
             DATA_FILES.append((dll_path, dest))
             print(f"Added FreeCAD Tkinter DLL: {dll_path}")
 
-    # Try to find and include Tcl library directories
-    # Common locations where FreeCAD might have Tcl libraries
+    # Include Tcl/Tk library directories for runtime
+    # These are critical for proper Tkinter functionality
     tcl_search_paths = [
-        os.path.join(freecad_lib, "tcl8.6"),
-        os.path.join(freecad_bin, "tcl8.6"),
-        os.path.join(freecad_bin, "lib", "tcl8.6"),
-        os.path.join(freecad_lib, "tk8.6"),
-        os.path.join(freecad_bin, "tk8.6"),
-        os.path.join(freecad_bin, "lib", "tk8.6"),
+        (os.path.join(freecad_lib, "tcl8.6"), "_tcl_data/tcl8.6"),
+        (os.path.join(freecad_bin, "tcl8.6"), "_tcl_data/tcl8.6"),
+        (os.path.join(freecad_bin, "lib", "tcl8.6"), "_tcl_data/tcl8.6"),
+        (os.path.join(freecad_lib, "tk8.6"), "_tcl_data/tk8.6"),
+        (os.path.join(freecad_bin, "tk8.6"), "_tcl_data/tk8.6"),
+        (os.path.join(freecad_bin, "lib", "tk8.6"), "_tcl_data/tk8.6"),
     ]
 
-    for tcl_path in tcl_search_paths:
-        if os.path.exists(tcl_path):
-            if "tcl8.6" in tcl_path:
-                DATA_FILES.append((tcl_path, "tcl8.6"))
-                print(f"Added Tcl library: {tcl_path}")
-            elif "tk8.6" in tcl_path:
-                DATA_FILES.append((tcl_path, "tk8.6"))
-                print(f"Added Tk library: {tcl_path}")
+    for tcl_source, tcl_dest in tcl_search_paths:
+        if os.path.exists(tcl_source):
+            DATA_FILES.append((tcl_source, tcl_dest))
+            print(f"Added Tcl/Tk library: {tcl_source} -> {tcl_dest}")
 
 except Exception as e:
     print(f"Warning: Could not locate FreeCAD Tcl/Tk libraries: {e}")
@@ -275,7 +271,7 @@ a = Analysis(
     hiddenimports=HIDDEN_IMPORTS,
     hookspath=[],
     hooksconfig={},
-    runtime_hooks=[],
+    runtime_hooks=['hooks/rthook_tkinter_fix.py'],
     excludes=EXCLUDES,
     noarchive=False,
     optimize=2,  # Maximum bytecode optimization
