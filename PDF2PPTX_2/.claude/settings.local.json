@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//g/works/apps/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
