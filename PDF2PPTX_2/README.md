@@ -75,6 +75,25 @@ PDF2PPTX_2/
 
 ### 1. 環境セットアップ
 
+#### uvを使用した環境構築（推奨）
+
+```bash
+# uvのインストール（初回のみ）
+# Windows: winget install astral-sh.uv
+# または: pip install uv
+
+# 仮想環境作成
+uv venv
+
+# 仮想環境有効化（Windows）
+.venv\Scripts\activate
+
+# 依存関係インストール
+uv pip install -r requirements.txt
+```
+
+#### 従来のpip環境
+
 ```bash
 # 仮想環境作成（必須）
 python -m venv venv
@@ -208,3 +227,44 @@ MIT License - 詳細は LICENSE ファイルを参照
 ---
 
 **PDF2PNG/PDF2PPTX Converter v3.0** - Modern, Secure, Professional PDF Conversion Tool
+
+---
+
+## 📝 開発ログ
+
+### 2025-01-20 環境構築完了
+
+#### 実施内容
+1. **uv環境のセットアップ**
+   - `uv 0.6.14`を使用した仮想環境構築
+   - Python 3.13.3環境を`.venv`に作成
+
+2. **依存関係のインストール**
+   - 必須パッケージをuvでインストール完了
+     - PySide6 6.9.2 (Qt6 GUIフレームワーク)
+     - pdf2image 1.17.0 (PDF変換)
+     - python-pptx 1.0.2 (PowerPoint生成)
+     - Pillow 11.3.0 (画像処理)
+     - loguru 0.7.3 (ロギング)
+     - python-dotenv 1.1.1 (環境変数)
+
+3. **プロジェクト構造の作成**
+   ```
+   src/
+   ├── main.py         # エントリーポイント作成済み
+   ├── core/           # PDF処理エンジン用ディレクトリ
+   ├── gui/            # GUI関連（Qt/PySide6）
+   ├── utils/          # ユーティリティ
+   └── tests/          # テスト用ディレクトリ
+   ```
+
+4. **基本ファイルの配置**
+   - `requirements.txt`: 依存関係定義
+   - `src/main.py`: メインエントリーポイント（ロギング設定付き）
+   - 各ディレクトリに`__init__.py`配置
+
+#### 次のステップ
+- [ ] UIコンポーネント（Material Design 3）の実装
+- [ ] PDF処理コアエンジンの実装
+- [ ] 設定管理システムの構築
+- [ ] エラーハンドリング機構の実装

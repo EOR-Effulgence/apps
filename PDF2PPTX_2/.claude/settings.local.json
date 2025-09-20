@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Read(//g/works/apps/**)"
+      "Read(//g/works/apps/**)",
+      "Bash(py --version)",
+      "Bash(python:*)",
+      "Bash(mkdir:*)",
+      "Bash(uv:*)"
     ],
     "deny": [],
     "ask": []
