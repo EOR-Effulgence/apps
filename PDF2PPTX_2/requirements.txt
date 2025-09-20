@@ -1,21 +1,21 @@
 # PDF2PPTX v3.0 依存関係
-# PySide6/Qt6ベースのモダンUI版
+# tkinter + customtkinter ベース（Windows 11安定動作版）
 
 # Core dependencies
-PySide6>=6.5.0          # Qt6 GUI framework
-pdf2image>=1.16.3       # PDF to image conversion
-python-pptx>=0.6.21     # PowerPoint generation
-Pillow>=10.0.0          # Image processing
-
-# Development dependencies (optional)
-pytest>=7.4.0           # Testing framework
-pytest-qt>=4.2.0        # Qt testing support
-pytest-cov>=4.1.0       # Coverage reporting
-black>=23.0.0           # Code formatting
-mypy>=1.5.0             # Type checking
-ruff>=0.1.0             # Linting
-pyinstaller>=6.0.0      # Build executable
+customtkinter>=5.2.0    # Modern tkinter UI framework
+PyMuPDF>=1.23.0        # PDF processing (fitz)
+python-pptx>=0.6.21    # PowerPoint generation
+Pillow>=10.0.0         # Image processing
+pdf2image>=1.16.3      # PDF to image conversion (poppler-based)
 
 # Additional utilities
-python-dotenv>=1.0.0    # Environment variables
-loguru>=0.7.0           # Advanced logging
+python-dotenv>=1.0.0   # Environment variables
+loguru>=0.7.0          # Advanced logging
+
+# Development dependencies (optional)
+pytest>=7.4.0          # Testing framework
+pytest-cov>=4.1.0      # Coverage reporting
+black>=23.0.0          # Code formatting
+mypy>=1.5.0            # Type checking
+ruff>=0.1.0            # Linting
+pyinstaller>=6.0.0     # Build executable

@@ -12,7 +12,11 @@ def setup_logging():
     """ロギングの設定"""
     logger.remove()
     logger.add(sys.stderr, level="INFO", format="<green>{time:HH:mm:ss}</green> | <level>{message}</level>")
-    logger.add("logs/app.log", rotation="10 MB", level="DEBUG")
+
+    # ログディレクトリ作成
+    log_dir = Path("logs")
+    log_dir.mkdir(exist_ok=True)
+    logger.add(log_dir / "app.log", rotation="10 MB", level="DEBUG")
 
 def main():
     """アプリケーションのメインエントリーポイント"""
@@ -20,17 +24,17 @@ def main():
     logger.info("PDF2PPTX v3.0 起動")
 
     try:
-        from PySide6.QtWidgets import QApplication
-        from src.ui.main_window import MainWindow
+        import tkinter as tk
+        import customtkinter as ctk
+        from src.gui.main_window import MainWindow
 
-        app = QApplication(sys.argv)
-        app.setApplicationName("PDF2PPTX")
-        app.setOrganizationName("PDF2PPTX")
+        # CustomTkinter設定
+        ctk.set_appearance_mode("system")  # システムテーマ追従
+        ctk.set_default_color_theme("blue")  # デフォルトカラーテーマ
 
-        window = MainWindow()
-        window.show()
-
-        sys.exit(app.exec())
+        # アプリケーション起動
+        app = MainWindow()
+        app.mainloop()
 
     except ImportError as e:
         logger.error(f"必要なモジュールのインポートに失敗: {e}")
@@ -39,6 +43,8 @@ def main():
     except Exception as e:
         logger.exception(f"予期しないエラー: {e}")
         return 1
+
+    return 0
 
 if __name__ == "__main__":
     sys.exit(main())
