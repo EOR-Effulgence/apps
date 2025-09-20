@@ -8,6 +8,10 @@ import os
 from pathlib import Path
 from loguru import logger
 
+# srcディレクトリをPythonパスに追加
+current_dir = Path(__file__).parent
+sys.path.insert(0, str(current_dir))
+
 def setup_logging():
     """ロギングの設定"""
     logger.remove()
@@ -26,7 +30,7 @@ def main():
     try:
         import tkinter as tk
         import customtkinter as ctk
-        from src.gui.main_window import MainWindow
+        from gui.main_window_improved import MainWindow
 
         # CustomTkinter設定
         ctk.set_appearance_mode("system")  # システムテーマ追従
