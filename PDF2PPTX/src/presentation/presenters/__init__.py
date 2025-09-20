@@ -1,1 +1,0 @@
-"""Presenters package for MVP architecture."""

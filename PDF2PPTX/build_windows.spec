@@ -80,8 +80,6 @@ HIDDEN_IMPORTS = [
     'pptx.enum.dml',
 
     # Refactored modules (v3.0)
-    'src.application.services.conversion_service',
-    'src.presentation.presenters.main_presenter',
     'src.config',
     'src.core.pdf_processor',
     'src.ui.main_window',

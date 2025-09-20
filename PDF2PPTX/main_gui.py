@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-PDF2PNG/PDF2PPTX Converter v3.0 - Qt Edition Main Entry Point
+PDF2PNG/PDF2PPTX Converter v3.0 - GUI Main Entry Point
 
 PySide6-based GUI application without TCL/Tkinter dependencies.
 Provides modern, native look and feel with improved stability.
 
 Usage:
-    python main_qt.py              # Launch Qt GUI application
-    python main_qt.py --version    # Show version information
-    python main_qt.py --test-mode  # Test mode (for build validation)
+    python main_gui.py              # Launch Qt GUI application
+    python main_gui.py --version    # Show version information
+    python main_gui.py --test-mode  # Test mode (for build validation)
 
 Features:
 - Modern Qt6 interface
@@ -42,20 +42,20 @@ sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 # Version information
 __version__ = "3.0.0"
-__app_name__ = "PDF2PNG/PDF2PPTX Converter (Qt Edition)"
+__app_name__ = "PDF2PNG/PDF2PPTX Converter (GUI)"
 
 
 def parse_arguments() -> argparse.Namespace:
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(
-        prog="PDF2PNG Qt Converter",
-        description="Convert PDF files to PNG images or PowerPoint presentations (Qt Edition)",
+        prog="PDF2PNG GUI Converter",
+        description="Convert PDF files to PNG images or PowerPoint presentations (GUI Edition)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python main_qt.py                    # Launch Qt GUI application
-  python main_qt.py --version          # Show version
-  python main_qt.py --test-mode        # Test mode (for build validation)
+  python main_gui.py                   # Launch GUI application
+  python main_gui.py --version         # Show version
+  python main_gui.py --test-mode       # Test mode (for build validation)
 
 Qt Edition Features:
   - Modern PySide6 interface
@@ -128,7 +128,6 @@ def test_mode() -> int:
         # Test core application imports
         from src.config import get_app_config
         from src.core.pdf_processor import PDFProcessor
-        from src.application.services.conversion_service import ConversionService
         from src.utils.path_utils import PathManager
         from src.ui.qt_main_window import QtMainWindow
 
@@ -146,9 +145,7 @@ def test_mode() -> int:
         pdf_processor = PDFProcessor()
         print("[OK] PDF processor initialized")
 
-        # Test conversion service
-        conversion_service = ConversionService(path_manager)
-        print("[OK] Conversion service initialized")
+        # ConversionService removed - skip test
 
         # Test Qt application creation (without showing window)
         app = QApplication([])

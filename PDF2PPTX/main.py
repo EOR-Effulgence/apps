@@ -39,7 +39,6 @@ Date: 2025-09-20
 import sys
 import os
 import argparse
-import asyncio
 from pathlib import Path
 from typing import Optional
 
@@ -131,7 +130,6 @@ def test_mode() -> int:
         # Test basic imports
         from src.config import get_app_config
         from src.core.pdf_processor import PDFProcessor
-        from src.application.services.conversion_service import ConversionService
         from src.utils.path_utils import PathManager
 
         print("[OK] All core modules imported successfully")
@@ -148,9 +146,7 @@ def test_mode() -> int:
         pdf_processor = PDFProcessor()
         print("[OK] PDF processor initialized")
 
-        # Test conversion service
-        conversion_service = ConversionService(path_manager)
-        print("[OK] Conversion service initialized")
+        # ConversionService removed - skip test
 
         print("")
         print("[SUCCESS] All tests passed successfully!")
@@ -165,7 +161,7 @@ def test_mode() -> int:
         return 1
 
 
-async def main_async() -> int:
+def main_sync() -> int:
     """Main application entry point (async version)."""
     args = parse_arguments()
 
@@ -173,41 +169,22 @@ async def main_async() -> int:
     if args.test_mode:
         return test_mode()
 
-    # Handle no-GUI mode (placeholder for future CLI implementation)
+    # Handle no-GUI mode - redirect to console version
     if args.no_gui:
-        print("CLI mode is not yet implemented.")
-        print("Please run without --no-gui flag to use the GUI interface.")
+        print("Redirecting to console mode...")
+        print("Please use: python main_console.py")
         return 1
 
     # Set up application environment
     setup_application_environment(args)
 
     try:
-        # Import GUI components
-        from src.ui.main_window import MainWindow
-        from src.application.services.conversion_service import ConversionService
-        from src.presentation.presenters.main_presenter import MainPresenter
-        from src.utils.path_utils import PathManager
-        from src.utils.error_handling import setup_logging
-
-        # Set up logging
-        log_file = PROJECT_ROOT / "logs" / "application.log"
-        logger = setup_logging(log_file, level=args.log_level)
-        logger.info(f"Starting {__app_name__} v{__version__}")
-
-        # Initialize core components
-        path_manager = PathManager()
-        conversion_service = ConversionService(path_manager)
-
-        # Create and run GUI application
-        app = MainWindow()
-        presenter = MainPresenter(app, conversion_service)
-
-        # Initialize presenter
-        await presenter.initialize()
-
-        # Bind presenter to view
-        app.set_presenter(presenter)
+        # For GUI mode, redirect to Qt version
+        print("GUI mode requires Qt interface.")
+        print("Please use: python main_gui.py")
+        print("")
+        print("For console mode, use: python main_console.py")
+        return 1
 
         logger.info("Application initialized successfully")
 
@@ -246,19 +223,9 @@ async def main_async() -> int:
 
 
 def main() -> int:
-    """Main application entry point (sync wrapper)."""
+    """Main application entry point."""
     try:
-        # Check if we're running in an event loop
-        try:
-            loop = asyncio.get_running_loop()
-            # If we reach here, we're already in an event loop
-            # This shouldn't happen in normal usage, but handle gracefully
-            print("Warning: Already running in an event loop")
-            return asyncio.create_task(main_async()).result()
-        except RuntimeError:
-            # No event loop running, which is the normal case
-            return asyncio.run(main_async())
-
+        return main_sync()
     except KeyboardInterrupt:
         return 0
     except Exception as e:
