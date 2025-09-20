@@ -9,7 +9,18 @@
       "Bash(find:*)",
       "Bash(.venvScriptspython.exe test_core_functions.py)",
       "Bash(.venv\\Scripts\\python.exe test_core.py:*)",
-      "Bash(.venv/Scripts/python.exe test_core.py:*)"
+      "Bash(.venv/Scripts/python.exe test_core.py:*)",
+      "Bash(.venv/Scripts/python.exe src/main.py:*)",
+      "Bash(../.venv/Scripts/python.exe:*)",
+      "Bash(.venv/Scripts/python.exe:*)",
+      "Bash(.venvScriptspython.exe srcmain.py)",
+      "Bash(.venv\\Scripts\\python.exe run_app.py:*)",
+      "Bash(.venv\\Scripts\\python.exe test_coordinates.py:*)",
+      "Bash(dir Input)",
+      "Bash(timeout:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []
