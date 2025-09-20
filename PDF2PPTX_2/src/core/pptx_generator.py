@@ -19,8 +19,8 @@ from enum import Enum
 from PIL import Image
 from loguru import logger
 
-from ..utils.error_handler import ErrorHandler, ErrorType
-from ..utils.config import ConfigManager
+from utils.error_handler import ErrorHandler, ErrorType
+from utils.config import ConfigManager
 
 
 class SlideSize(Enum):
@@ -121,15 +121,21 @@ class PPTXGenerator:
             )
 
             # ラベルスタイル設定
+            label_position_str = config.get("label_position", "top_left")
+            logger.info(f"設定から読み込んだlabel_position: {label_position_str}")
+
             self.default_label_style = LabelStyle(
                 font_name=config.get("font_name", "メイリオ"),
                 font_size=config.get("font_size", 18),
                 font_color=config.get("text_color", "#FFFFFF"),
                 background_color=config.get("background_color", "#1976D2"),
-                position=LabelPosition(config.get("label_position", "bottom_center")),
+                position=LabelPosition(label_position_str),
                 add_page_numbers=config.get("add_page_numbers", True),
-                add_filename=config.get("add_filename", True)
+                add_filename=config.get("add_filename", True),
+                margin_mm=0.0  # 座標0,0配置のためマージンを0に設定
             )
+
+            logger.info(f"作成されたLabelStyle.position: {self.default_label_style.position}")
 
             # 画像配置設定
             self.default_image_settings = ImageSettings(
@@ -240,12 +246,12 @@ class PPTXGenerator:
             slide = prs.slides.add_slide(slide_layout)
 
             # 画像を追加
-            self._add_image_to_slide(slide, image_path, img_settings)
+            self._add_image_to_slide(slide, image_path, img_settings, prs)
 
             # ラベルを追加
             if lbl_style.position != LabelPosition.NONE:
                 self._add_label_to_slide(
-                    slide, image_path, page_number, custom_title, lbl_style
+                    slide, image_path, page_number, custom_title, lbl_style, prs
                 )
 
             logger.debug(f"画像スライドを追加しました: {image_path}")
@@ -261,7 +267,8 @@ class PPTXGenerator:
     def _add_image_to_slide(self,
                            slide,
                            image_path: Path,
-                           settings: ImageSettings) -> None:
+                           settings: ImageSettings,
+                           presentation) -> None:
         """
         スライドに画像を追加
 
@@ -276,8 +283,9 @@ class PPTXGenerator:
                 img_width, img_height = img.size
 
             # スライドサイズを取得（EMU単位）
-            slide_width_emu = slide.slide_layout.slide.slide_width
-            slide_height_emu = slide.slide_layout.slide.slide_height
+            # プレゼンテーションオブジェクトから直接取得
+            slide_width_emu = presentation.slide_width
+            slide_height_emu = presentation.slide_height
 
             # 利用可能なサイズを計算（マージンを考慮）
             margin_emu = Mm(settings.margin_mm)
@@ -340,7 +348,8 @@ class PPTXGenerator:
                            image_path: Path,
                            page_number: Optional[int],
                            custom_title: Optional[str],
-                           style: LabelStyle) -> None:
+                           style: LabelStyle,
+                           presentation) -> None:
         """
         スライドにラベルを追加
 
@@ -359,9 +368,36 @@ class PPTXGenerator:
                 return
 
             # ラベルの配置位置とサイズを計算
-            label_box = self._calculate_label_box(slide, style)
+            label_box = self._calculate_label_box(slide, style, presentation)
 
-            # テキストボックスを追加
+            # 1. 四角形オブジェクトを追加（背景）
+            from pptx.enum.shapes import MSO_SHAPE
+
+            # デバッグ出力
+            logger.info(f"ラベル配置座標: left={label_box['left']}, top={label_box['top']}, width={label_box['width']}, height={label_box['height']}")
+
+            rectangle = slide.shapes.add_shape(
+                MSO_SHAPE.RECTANGLE,
+                left=label_box["left"],
+                top=label_box["top"],
+                width=label_box["width"],
+                height=label_box["height"]
+            )
+
+            # 実際に配置された座標を確認
+            logger.info(f"実際の四角形座標: left={rectangle.left}, top={rectangle.top}")
+
+            # 四角形の背景色を設定
+            rect_fill = rectangle.fill
+            rect_fill.solid()
+            rect_fill.fore_color.rgb = RGBColor.from_string(style.background_color.replace("#", ""))
+
+            # 四角形の枠線を設定
+            rect_line = rectangle.line
+            rect_line.color.rgb = RGBColor.from_string(style.background_color.replace("#", ""))
+            rect_line.width = Pt(1)
+
+            # 2. テキストオブジェクトを四角形の上に追加
             textbox = slide.shapes.add_textbox(
                 left=label_box["left"],
                 top=label_box["top"],
@@ -372,16 +408,21 @@ class PPTXGenerator:
             # テキストフレームを設定
             text_frame = textbox.text_frame
             text_frame.clear()
-            text_frame.margin_left = Mm(style.padding_mm)
-            text_frame.margin_right = Mm(style.padding_mm)
-            text_frame.margin_top = Mm(style.padding_mm)
-            text_frame.margin_bottom = Mm(style.padding_mm)
+            # 上下中央配置のためのマージン調整
+            text_frame.margin_left = Mm(2)  # 左マージン
+            text_frame.margin_right = Mm(2)  # 右マージン
+            text_frame.margin_top = 0       # 上マージンを0に
+            text_frame.margin_bottom = 0    # 下マージンを0に
             text_frame.word_wrap = True
+
+            # 垂直方向中央配置
+            from pptx.enum.text import MSO_ANCHOR
+            text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE
 
             # テキストを設定
             p = text_frame.add_paragraph()
             p.text = label_text
-            p.alignment = PP_ALIGN.CENTER
+            p.alignment = PP_ALIGN.LEFT  # 水平方向は左寄せ
 
             # フォントスタイルを設定
             font = p.font
@@ -389,14 +430,13 @@ class PPTXGenerator:
             font.size = Pt(style.font_size)
             font.color.rgb = RGBColor.from_string(style.font_color.replace("#", ""))
 
-            # 背景色を設定
-            fill = textbox.fill
-            fill.solid()
-            fill.fore_color.rgb = RGBColor.from_string(style.background_color.replace("#", ""))
+            # テキストボックスの背景を透明にする
+            textbox_fill = textbox.fill
+            textbox_fill.background()
 
-            # 枠線を無効化
-            line = textbox.line
-            line.fill.background()
+            # テキストボックスの枠線を無効化
+            textbox_line = textbox.line
+            textbox_line.fill.background()
 
             logger.debug(f"ラベルを追加しました: {label_text[:50]}...")
 
@@ -423,18 +463,21 @@ class PPTXGenerator:
         """
         text_parts = []
 
+        # ファイル名と数値（ページ番号）を「ファイル名_数値」形式で結合
+        if style.add_filename and style.add_page_numbers and page_number:
+            filename = self._clean_filename(image_path.stem)
+            text_parts.append(f"{filename}_{page_number}")
+        elif style.add_filename:
+            # ページ番号がない場合はファイル名のみ
+            filename = self._clean_filename(image_path.stem)
+            text_parts.append(filename)
+        elif style.add_page_numbers and page_number:
+            # ファイル名がない場合はページ番号のみ
+            text_parts.append(str(page_number))
+
         # カスタムテキスト
         if style.custom_text:
             text_parts.append(style.custom_text)
-
-        # ファイル名
-        if style.add_filename:
-            filename = image_path.stem
-            text_parts.append(filename)
-
-        # ページ番号
-        if style.add_page_numbers and page_number:
-            text_parts.append(f"ページ {page_number}")
 
         # カスタムタイトル
         if custom_title:
@@ -442,7 +485,56 @@ class PPTXGenerator:
 
         return " | ".join(text_parts)
 
-    def _calculate_label_box(self, slide, style: LabelStyle) -> Dict[str, int]:
+    def _clean_filename(self, filename: str) -> str:
+        """
+        ファイル名をクリーンアップ
+
+        例:
+        - 大漢和辞典序文_page_013_13 → 大漢和辞典序文_13
+        - filename_page_001_1 → filename_1
+        - simple_filename → simple_filename
+
+        Args:
+            filename: 元のファイル名
+
+        Returns:
+            クリーンアップされたファイル名
+        """
+        import re
+
+        # .pdfを除去
+        if filename.lower().endswith('.pdf'):
+            filename = filename[:-4]
+
+        # 様々なページ番号パターンを処理
+
+        # パターン1: _page_XXX_YY → _YY
+        # 例: 大漢和辞典序文_page_013_13 → 大漢和辞典序文_13
+        pattern1 = r'_page_\d+_(\d+)$'
+        match = re.search(pattern1, filename)
+        if match:
+            base_name = filename[:match.start()]
+            page_num = match.group(1)
+            return f"{base_name}_{page_num}"
+
+        # パターン2: _page_XXX → ファイル名のみ（ページ番号削除）
+        # 例: filename_page_013 → filename
+        pattern2 = r'_page_\d+$'
+        if re.search(pattern2, filename):
+            filename = re.sub(pattern2, '', filename)
+
+        # パターン3: 末尾の_数字_数字 → _最後の数字
+        # 例: filename_001_13 → filename_13
+        pattern3 = r'_\d+_(\d+)$'
+        match = re.search(pattern3, filename)
+        if match:
+            base_name = filename[:match.start()]
+            page_num = match.group(1)
+            return f"{base_name}_{page_num}"
+
+        return filename
+
+    def _calculate_label_box(self, slide, style: LabelStyle, presentation) -> Dict[str, int]:
         """
         ラベルボックスの位置とサイズを計算
 
@@ -453,26 +545,50 @@ class PPTXGenerator:
         Returns:
             ラベルボックス情報（left, top, width, height）
         """
-        slide_width = slide.slide_layout.slide.slide_width
-        slide_height = slide.slide_layout.slide.slide_height
+        # プレゼンテーションからサイズを取得
+        slide_width = presentation.slide_width
+        slide_height = presentation.slide_height
         margin = Mm(style.margin_mm)
 
-        # ラベルサイズ
-        label_width = slide_width - (margin * 2)
-        label_height = Mm(15)  # 固定高さ
+        # デバッグ: 現在のstyle.positionを確認
+        logger.info(f"_calculate_label_box呼び出し - style.position: {style.position} (型: {type(style.position)})")
+        logger.info(f"LabelPosition.TOP_LEFT: {LabelPosition.TOP_LEFT} (型: {type(LabelPosition.TOP_LEFT)})")
+        logger.info(f"比較結果: {style.position == LabelPosition.TOP_LEFT}")
+        logger.info(f"値比較: {style.position.value if hasattr(style.position, 'value') else 'N/A'} == {LabelPosition.TOP_LEFT.value}")
 
-        # 位置を計算
-        if style.position in [LabelPosition.TOP_LEFT, LabelPosition.TOP_CENTER, LabelPosition.TOP_RIGHT]:
-            top = margin
-        else:  # BOTTOM_*
-            top = slide_height - margin - label_height
+        # ラベルサイズ（左上配置用に最適化）
+        # より確実な条件判定：enum比較と文字列値比較の両方
+        is_top_left = (style.position == LabelPosition.TOP_LEFT or
+                      (hasattr(style.position, 'value') and style.position.value == "top_left"))
 
-        if style.position in [LabelPosition.TOP_LEFT, LabelPosition.BOTTOM_LEFT]:
-            left = margin
-        elif style.position in [LabelPosition.TOP_RIGHT, LabelPosition.BOTTOM_RIGHT]:
-            left = slide_width - margin - label_width
-        else:  # CENTER
-            left = margin
+        logger.info(f"is_top_left判定結果: {is_top_left}")
+
+        if is_top_left:
+            logger.info("TOP_LEFT条件に一致しました！")
+            # 左上の場合はコンパクトなサイズに調整、座標0,0に配置
+            label_width = Mm(80)  # 約8cm幅
+            label_height = Mm(12)  # 約1.2cm高さ
+            left = Mm(0)  # 座標0の地点（最左端）- EMU単位に変換
+            top = Mm(0)   # 座標0の地点（最上端）- EMU単位に変換
+
+            # デバッグ用情報出力
+            logger.info(f"TOP_LEFT配置: left={left} ({left} EMU), top={top} ({top} EMU)")
+            logger.info(f"label_width={label_width} ({label_width} EMU), label_height={label_height} ({label_height} EMU)")
+        else:
+            logger.info(f"TOP_LEFT以外の配置: {style.position}")
+            # その他の位置の場合は従来通り
+            label_width = slide_width - (margin * 2)
+            label_height = Mm(15)
+
+            if style.position in [LabelPosition.TOP_CENTER, LabelPosition.TOP_RIGHT]:
+                top = margin
+            else:  # BOTTOM_*
+                top = slide_height - margin - label_height
+
+            if style.position in [LabelPosition.TOP_RIGHT, LabelPosition.BOTTOM_RIGHT]:
+                left = slide_width - margin - label_width
+            else:  # CENTER
+                left = margin
 
         return {
             "left": int(left),
@@ -621,9 +737,9 @@ class PPTXGenerator:
             # プレゼンテーション作成
             prs = self.create_presentation(slide_settings)
 
-            # タイトルスライドを追加（オプション）
-            if title:
-                self._add_title_slide(prs, title)
+            # タイトルスライドを追加（オプション）- 表紙は不要なためコメントアウト
+            # if title:
+            #     self._add_title_slide(prs, title)
 
             if progress_callback:
                 progress_callback(0, len(valid_images), "画像スライドを追加中...")

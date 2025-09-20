@@ -244,7 +244,7 @@ class ErrorHandler:
         print(f"\n{symbol} {message_info['title']}")
         print(f"  {message_info['message']}")
         if 'suggestion' in message_info:
-            print(f"  💡 {message_info['suggestion']}")
+            print(f"  [提案] {message_info['suggestion']}")
         print()
 
     def handle_exception(self, exc_type, exc_value, exc_traceback) -> None:

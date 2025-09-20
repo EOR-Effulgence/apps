@@ -26,16 +26,17 @@ class ConfigManager:
             "pdf_to_pptx": {
                 "slide_size": [420, 297],  # A3横 (mm)
                 "font_name": "メイリオ",
-                "font_size": 18,
+                "font_size": 14,
                 "text_color": "#FFFFFF",
                 "background_color": "#1976D2",
-                "label_position": "bottom",
+                "label_position": "top_left",
                 "add_page_numbers": True
             },
             "output": {
                 "create_subfolder": True,
                 "subfolder_prefix": "converted",
-                "overwrite_existing": False
+                "overwrite_existing": False,
+                "default_format": "PPTX"  # デフォルト出力フォーマットをPPTXに設定
             }
         },
         "ui": {
