@@ -1,6 +1,6 @@
 # PDF2PNG/PDF2PPTX Application Dependencies
 # Security-hardened dependency configuration
-# Generated: 2025-09-18 | Python 3.13+ compatible
+# Generated: 2025-09-20 | Python 3.13+ compatible | Modern GUI Support
 # Security audit: PASSED (0 known vulnerabilities)
 
 # ==============================================================================
@@ -21,6 +21,15 @@ python-pptx>=1.0.0,<1.1.0
 Pillow>=11.0.0,<12.0.0
 # Security: Version 11.x includes fixes for multiple image processing CVEs
 # Rationale: Latest major version with comprehensive security patches
+
+# Modern GUI libraries - Enhanced Tkinter alternatives
+customtkinter>=5.2.0,<6.0.0
+# Security: Modern, actively maintained GUI framework
+# Rationale: Better Tkinter compatibility and modern styling
+
+tkinterdnd2>=0.4.0,<0.5.0
+# Security: Drag-and-drop support for Tkinter applications
+# Rationale: Enhanced user experience with file handling
 
 # ==============================================================================
 # DEVELOPMENT AND QUALITY ASSURANCE DEPENDENCIES

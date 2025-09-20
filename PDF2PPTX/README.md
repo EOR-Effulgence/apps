@@ -6,31 +6,33 @@ A robust PDF conversion tool that transforms PDF documents into PNG images or Po
 
 ## 🚀 Quick Start
 
-### **Option 1: Standalone Executable (推奨)**
+### **⚠️ 重要: Virtual Environment の使用が必須です**
+
+**このプロジェクトでは、Tkinterの安定動作のためにプロジェクト内の仮想環境 (`venv/`) を必須で使用してください。**
+
+### **Option 1: Virtual Environment + Standalone Executable (推奨)**
 ```bash
-# Download and run directly (no Python installation required)
+# 1. Activate virtual environment (REQUIRED)
+venv\Scripts\activate
+
+# 2. Run pre-built executable
 dist\PDF2PNG_Converter.exe
 ```
 
-### **Option 2: Python Development Environment**
+### **Option 2: Virtual Environment Development**
 ```bash
-# 1. Activate virtual environment
-venv\Scripts\Activate.ps1
+# 1. Create virtual environment (if not exists)
+python -m venv venv
 
-# 2. Install dependencies
+# 2. Activate virtual environment (REQUIRED)
+venv\Scripts\activate
+
+# 3. Install dependencies
 pip install -r requirements.txt
+pip install pyinstaller
 
-# 3. Run the application
+# 4. Run the application
 python main.py
-```
-
-### **Option 3: UV High-Performance Build**
-```bash
-# Install UV package manager
-curl -LsSf https://astral.sh/uv/install.ps1 | powershell
-
-# Build with UV (10-100x faster)
-.\scripts\build_with_uv.ps1 -Version "3.0.0" -Clean -Test
 ```
 
 ## ✨ Features
@@ -101,6 +103,10 @@ PDF2PNG/
 
 ### GUI Application
 ```bash
+# ALWAYS activate virtual environment first
+venv\Scripts\activate
+
+# Then run the application
 python main.py
 ```
 
@@ -114,8 +120,14 @@ python main.py
 
 ### Command Line (Advanced)
 ```bash
+# ALWAYS activate virtual environment first
+venv\Scripts\activate
+
 # Direct module execution
 python -m src.ui.main_window
+
+# Console version
+python main_console.py
 
 # Or import in Python scripts
 from src.core.pdf_processor import PDFProcessor
@@ -124,42 +136,42 @@ from src.config import AppConfig
 
 ## 🏗️ Building Executable
 
-### **Standard PyInstaller Build**
+### **Virtual Environment + PyInstaller Build (必須)**
 ```bash
-# Install PyInstaller
+# 1. Activate virtual environment (REQUIRED)
+venv\Scripts\activate
+
+# 2. Ensure PyInstaller is installed in venv
 pip install pyinstaller
 
-# Build Windows executable
+# 3. Build Windows executable
 pyinstaller build_windows.spec --clean --noconfirm
 
-# Build using system Python
-pyinstaller build_windows.spec --clean --noconfirm
+# 4. Build Console version
+pyinstaller build_console.spec --clean --noconfirm
 
-# Find executable in dist/ directory
-./dist/PDF2PNG_Converter.exe   # Windows (37.4MB)
+# 5. Find executables in dist/ directory
+./dist/PDF2PNG_Converter.exe   # Windows GUI (37.4MB)
+./dist/PDF2PNG_Console.exe      # Console version
 ```
 
-### **UV High-Performance Build (推奨)**
+### **Manual Development Setup (推奨セットアップ)**
 ```bash
-# Install UV package manager
-curl -LsSf https://astral.sh/uv/install.ps1 | powershell
-
-# Run UV-powered build script (10-100x faster)
-.\scripts\build_with_uv.ps1 -Version "3.0.0" -Clean -Test -Verbose
-```
-
-### **Manual Development Setup**
-```bash
-# Create virtual environment
+# 1. Create virtual environment
 python -m venv venv
 
-# Activate virtual environment
-venv\Scripts\Activate.ps1
+# 2. Activate virtual environment (REQUIRED)
+venv\Scripts\activate
 
-# Install dependencies
-pip install PyMuPDF python-pptx Pillow pyinstaller
+# 3. Verify virtual environment is active
+where python
+# Should show: G:\works\apps\PDF2PPTX\venv\Scripts\python.exe
 
-# Build executable
+# 4. Install all dependencies
+pip install -r requirements.txt
+pip install pyinstaller
+
+# 5. Build executable
 pyinstaller build_windows.spec --clean --noconfirm
 ```
 
@@ -168,6 +180,9 @@ pyinstaller build_windows.spec --clean --noconfirm
 Run the test suite:
 
 ```bash
+# ALWAYS activate virtual environment first
+venv\Scripts\activate
+
 # Run all tests
 python -m pytest tests/
 
@@ -209,20 +224,37 @@ python -m pytest tests/ --cov=src --cov-report=html
 
 ### Common Issues
 
-1. **Missing Dependencies**
+1. **Tkinter Runtime Errors** (最も重要)
    ```bash
+   # Solution: Always use virtual environment
+   venv\Scripts\activate
+
+   # Verify virtual environment is active
+   where python
+   # Should show: G:\works\apps\PDF2PPTX\venv\Scripts\python.exe (not FreeCAD or system Python)
+   ```
+
+2. **Missing Dependencies**
+   ```bash
+   # Activate virtual environment first
+   venv\Scripts\activate
    pip install -r requirements.txt
    ```
 
-2. **Import Errors**
+3. **Import Errors**
+   - Ensure virtual environment is activated
    - Ensure you're running from the project root directory
    - Check that `src/` directory structure is intact
 
-3. **Permission Errors**
+4. **Build Errors**
+   - Always build from within the virtual environment
+   - Do not use FreeCAD Python or system Python for building
+
+5. **Permission Errors**
    - Ensure write permissions for output folders
    - Run as administrator if necessary on Windows
 
-4. **Memory Issues**
+6. **Memory Issues**
    - Reduce scale factor for large PDFs
    - Process files in smaller batches
 

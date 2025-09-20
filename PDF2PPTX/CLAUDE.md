@@ -7,46 +7,62 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-CSV2XLSX_IC is a Windows desktop application for converting between CSV and Excel (XLSX) files. It supports both GUI (classic and modern) and CLI interfaces, with features like drag-and-drop, automatic encoding detection, and batch processing.
+PDF2PPTX is a Windows desktop application for converting PDF documents into PNG images or PowerPoint presentations. It supports both GUI and command-line interfaces, with features like batch processing, automatic rotation, and customizable PowerPoint labels.
+
+## ⚠️ IMPORTANT: Virtual Environment Usage
+
+**このプロジェクトでは、プロジェクト内の仮想環境 (`venv/`) を必須で使用してください。FreeCADや他の外部Pythonインストールは使用しないでください。**
+
+**Virtual environment must be used for this project. Do not use FreeCAD or other external Python installations.**
+
+All development, building, and testing must be done within the project's virtual environment to ensure consistent dependencies and avoid Tkinter runtime errors.
 
 ## Development Commands
 
 ### Setup and Installation
 ```bash
-# Create virtual environment
+# Create virtual environment (if not exists)
 python -m venv venv
 
-# Activate virtual environment (Windows)
+# Activate virtual environment (Windows) - REQUIRED
 venv\Scripts\activate
 
-# Install dependencies
+# Install all dependencies
 pip install -r requirements.txt
 
-# Install modern UI dependencies (optional)
-pip install -r requirements_modern.txt
+# Install PyInstaller for building executables
+pip install pyinstaller
 ```
 
 ### Running the Application
 ```bash
-# Unified GUI version (recommended)
-uv run python src\app.py
-# Or use batch file
-csv2xlsx_app.bat
+# ⚠️ ALWAYS activate virtual environment first
+venv\Scripts\activate
 
-# CLI version
-python src\cli.py --help
-# Or use batch file
-csv2xlsx_cli.bat csv2xlsx file1.csv file2.csv --output result.xlsx
+# Standalone executable (recommended)
+dist\PDF2PNG_Converter.exe
+
+# Python GUI version (development)
+python main.py
+
+# Console version
+dist\PDF2PNG_Console.exe
+
+# Development mode
+python -m src.ui.main_window
 ```
 
 ### Testing
 ```bash
+# ⚠️ ALWAYS activate virtual environment first
+venv\Scripts\activate
+
 # Run all tests
 pytest
 
 # Run specific test files
-pytest tests/test_converter.py
-pytest tests/test_integration.py
+pytest tests/test_pdf_processor.py
+pytest tests/test_basic_functionality.py
 
 # Run tests with coverage
 pytest --cov=src tests/
@@ -54,78 +70,95 @@ pytest --cov=src tests/
 
 ### Code Quality
 ```bash
+# ⚠️ ALWAYS activate virtual environment first
+venv\Scripts\activate
+
 # Format code
 black src tests
-
-# Lint code
-ruff src tests
 
 # Type checking
 mypy src
 
-# Security check
-bandit -r src
+# Code compilation check
+python -m py_compile main.py
 ```
 
 ### Building Executables
 ```bash
-# Automated build (recommended)
-python build.py
+# ⚠️ ALWAYS activate virtual environment first
+venv\Scripts\activate
 
-# Quick build (minimal setup)
-quick_build.bat
+# Manual build with PyInstaller (Windows GUI version)
+pyinstaller build_windows.spec --clean --noconfirm
 
-# Manual build with PyInstaller
-pip install pyinstaller
-pyinstaller --onefile --windowed --name CSV2XLSX_GUI src\main.py
-pyinstaller --onefile --console --name CSV2XLSX_CLI src\cli.py
+# Manual build with PyInstaller (Console version)
+pyinstaller build_console.spec --clean --noconfirm
+
+# Check if virtual environment Python is being used
+where python
+# Should show: G:\works\apps\PDF2PPTX\venv\Scripts\python.exe
 ```
 
 ## Architecture
 
 ### Core Components
-- **src/converter.py**: Core conversion logic for CSV ↔ XLSX operations
-- **src/main.py**: Classic GUI implementation using tkinter
-- **src/modern_gui.py**: Modern GUI using CustomTkinter with animations
-- **src/cli.py**: Command-line interface
-- **src/animations.py**: Animation utilities for modern GUI
+- **main.py**: Main GUI application entry point
+- **main_console.py**: Console version entry point
+- **src/core/pdf_processor.py**: Core PDF processing logic
+- **src/ui/main_window.py**: Main GUI window implementation
+- **src/ui/converters.py**: UI conversion handlers
+- **src/config.py**: Application configuration management
 
 ### Key Features
-- **Encoding Detection**: Automatic detection of CSV encoding (UTF-8/Shift_JIS)
-- **Batch Processing**: Multiple CSV files to single XLSX workbook
-- **Multi-sheet Export**: XLSX to multiple CSV files (one per sheet)
-- **Progress Tracking**: Real-time progress bars and status updates
-- **Error Handling**: Comprehensive error handling for file operations
+- **PDF to PNG Conversion**: High-quality PNG image extraction from PDFs
+- **PDF to PowerPoint**: A3 landscape PowerPoint presentations from PDFs
+- **Automatic Rotation**: Portrait pages automatically rotated to landscape
+- **Batch Processing**: Process entire folders of PDF files at once
+- **Progress Tracking**: Real-time progress updates with user feedback
+- **Error Handling**: Comprehensive error reporting and recovery
 
 ### File Structure
 ```
-src/
-├── __init__.py
-├── app.py           # Unified GUI entry point (recommended)
-├── cli.py           # CLI entry point
-└── converter.py     # Core conversion logic
-
-tests/
-├── test_converter.py     # Unit tests
-├── test_integration.py   # Integration tests
-└── test_data_*.csv      # Test data files
-
-docs/
-├── BUILD_CHECKLIST.md
-└── WINDOWS_BUILD_GUIDE.md
+PDF2PPTX/
+├── main.py                    # Main GUI entry point
+├── main_console.py            # Console version entry point
+├── requirements.txt           # Python dependencies
+├── build_windows.spec         # PyInstaller Windows config
+├── build_console.spec         # PyInstaller console config
+├── venv/                      # Virtual environment (REQUIRED)
+│   ├── Scripts/
+│   │   ├── activate.bat       # Activation script
+│   │   ├── python.exe         # Virtual environment Python
+│   │   └── pyinstaller.exe    # PyInstaller in venv
+│   └── Lib/                   # Installed packages
+├── dist/                      # Built executables
+│   ├── PDF2PNG_Converter.exe  # Windows GUI version
+│   └── PDF2PNG_Console.exe    # Console version
+├── src/                       # Source code
+│   ├── core/
+│   │   └── pdf_processor.py   # Core PDF processing
+│   ├── ui/
+│   │   ├── main_window.py     # GUI implementation
+│   │   └── converters.py      # UI conversion handlers
+│   ├── utils/
+│   │   ├── error_handling.py  # Error management
+│   │   └── path_utils.py      # Path operations
+│   └── config.py              # Configuration
+└── tests/                     # Unit tests
+    ├── test_pdf_processor.py
+    └── test_basic_functionality.py
 ```
 
 ### GUI Framework
-- **Unified GUI**: CustomTkinter with tkinterdnd2 for modern styling and drag-and-drop
-- **Features**: Dark mode support, animations, toast notifications, progress visualization
-- **Shared Logic**: Common conversion logic in converter.py
+- **Tkinter**: Built-in Python GUI framework (requires proper virtual environment setup)
+- **Features**: File dialog, progress bars, real-time status updates
+- **Virtual Environment**: Essential for proper Tkinter library linking and DLL resolution
 
 ### Dependencies
-- **Core**: pandas, openpyxl for data processing
-- **GUI**: tkinter (built-in), tkinterdnd2, customtkinter
-- **CLI**: click for command-line interface
+- **Core**: PyMuPDF (fitz), python-pptx, Pillow for PDF/image processing
+- **GUI**: tkinter (built-in) for user interface
 - **Build**: PyInstaller for executable creation
-- **Development**: pytest, black, ruff, mypy, bandit
+- **Development**: pytest, black, mypy for code quality
 
 ## Development Guidelines
 
@@ -163,6 +196,7 @@ The build.py script handles:
 
 ### Windows-Specific Considerations
 - Handle Japanese file paths and names correctly
-- Support Shift_JIS encoding for legacy CSV files
-- Create Windows-specific batch files for easy launching
-- Ensure executables work without Python installation
+- Use virtual environment to avoid Tkinter DLL conflicts
+- Ensure proper Tcl/Tk library inclusion in PyInstaller builds
+- Virtual environment prevents issues with system Python or FreeCAD Python
+- Executables must include all Tkinter dependencies from virtual environment

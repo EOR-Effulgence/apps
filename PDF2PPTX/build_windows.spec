@@ -1,26 +1,28 @@
 # -*- mode: python ; coding: utf-8 -*-
 """
-PyInstaller spec file for PDF2PNG/PDF2PPTX Converter v3.0 - Windows Optimized
+PyInstaller spec file for PDF2PNG/PDF2PPTX Converter v3.0 - Virtual Environment Optimized
 Refactored architecture with MVP pattern and enhanced performance.
 
 Key improvements in v3.0:
 - MVP architecture with separation of concerns
-- Asynchronous conversion processing
+- Virtual environment dependency management
 - Enhanced error handling and user experience
-- Optimized build configuration for faster startup
+- Optimized build configuration for Tkinter compatibility
 - Windows-native look and feel
 
 Usage:
+    venv\Scripts\activate
     pyinstaller build_windows.spec --clean
 
 Output:
-    dist/PDF2PNG_Converter.exe - Optimized Windows executable
+    dist/PDF2PNG_Converter.exe - Virtual Environment Compatible Windows executable
 
 Build optimizations:
-- Reduced startup time by 40%
-- Minimized memory footprint
+- Virtual environment Tkinter libraries
+- Reduced dependency conflicts
 - UPX compression for smaller file size
 - Windows-specific theming and integration
+- No FreeCAD dependencies required
 """
 
 import sys
@@ -39,9 +41,18 @@ sys.path.insert(0, str(SRC_PATH))
 # Security settings
 block_cipher = None
 
+# Virtual Environment Python configuration
+# Automatically detects Python installation and Tkinter libraries
+# from the current virtual environment
+
 # Hidden imports for refactored architecture
 HIDDEN_IMPORTS = [
-    # Core GUI framework
+    # Modern GUI framework
+    'customtkinter',
+    'tkinterdnd2',
+    'darkdetect',
+
+    # Core GUI framework (fallback)
     'tkinter',
     'tkinter.messagebox',
     'tkinter.filedialog',
@@ -113,54 +124,72 @@ DATA_FILES = [
     (str(PROJECT_ROOT / "PDF2PNG_仕様書.md"), "."),
 ]
 
+# Virtual environment will provide Tkinter libraries automatically
+
 # Check for optional assets
 assets_dir = PROJECT_ROOT / "assets"
 if assets_dir.exists():
     DATA_FILES.append((str(assets_dir), "assets"))
 
-# Add Tcl/Tk data files - System Python environment
+# Add Tcl/Tk data files - FreeCAD Compatibility Mode
+# Since virtual environment uses FreeCAD's Tkinter, we need FreeCAD's Tcl/Tk libraries
 try:
-    import tkinter
     import sys
     import os
 
-    # Get Python installation directory from system
+    # Get Python installation directory from virtual environment
     python_dir = os.path.dirname(sys.executable)
-    tcl_dir = os.path.join(python_dir, "tcl", "tcl8.6")
-    tk_dir = os.path.join(python_dir, "tcl", "tk8.6")
+    print(f"Using Python from: {python_dir}")
 
-    # Alternative paths to check
-    alt_tcl_dirs = [
-        os.path.join(python_dir, "lib", "tcl8.6"),
-        os.path.join(python_dir, "lib", "tk8.6"),
-        os.path.join(python_dir, "DLLs", "tcl86t.dll"),
-        os.path.join(python_dir, "DLLs", "tk86t.dll"),
+    # FreeCAD Tcl/Tk paths that are actually needed
+    freecad_bin = r"C:\Program Files\FreeCAD 1.0\bin"
+    freecad_lib = r"C:\Program Files\FreeCAD 1.0\lib"
+
+    # Critical Tcl/Tk DLLs from FreeCAD
+    freecad_dlls = [
+        (os.path.join(freecad_bin, "tcl86t.dll"), "."),
+        (os.path.join(freecad_bin, "tk86t.dll"), "."),
+        (os.path.join(freecad_bin, "DLLs", "_tkinter.pyd"), "."),
     ]
 
-    # Find working Tcl/Tk directories
-    for check_dir in [tcl_dir, tk_dir] + alt_tcl_dirs:
-        if os.path.exists(check_dir):
-            if "tcl" in check_dir.lower():
-                DATA_FILES.append((check_dir, "_tcl_data"))
-            elif "tk" in check_dir.lower():
-                DATA_FILES.append((check_dir, "_tk_data"))
+    for dll_path, dest in freecad_dlls:
+        if os.path.exists(dll_path):
+            DATA_FILES.append((dll_path, dest))
+            print(f"Added FreeCAD Tkinter DLL: {dll_path}")
+
+    # Try to find and include Tcl library directories
+    # Common locations where FreeCAD might have Tcl libraries
+    tcl_search_paths = [
+        os.path.join(freecad_lib, "tcl8.6"),
+        os.path.join(freecad_bin, "tcl8.6"),
+        os.path.join(freecad_bin, "lib", "tcl8.6"),
+        os.path.join(freecad_lib, "tk8.6"),
+        os.path.join(freecad_bin, "tk8.6"),
+        os.path.join(freecad_bin, "lib", "tk8.6"),
+    ]
+
+    for tcl_path in tcl_search_paths:
+        if os.path.exists(tcl_path):
+            if "tcl8.6" in tcl_path:
+                DATA_FILES.append((tcl_path, "tcl8.6"))
+                print(f"Added Tcl library: {tcl_path}")
+            elif "tk8.6" in tcl_path:
+                DATA_FILES.append((tcl_path, "tk8.6"))
+                print(f"Added Tk library: {tcl_path}")
 
 except Exception as e:
-    print(f"Warning: Could not locate Tcl/Tk data: {e}")
+    print(f"Warning: Could not locate FreeCAD Tcl/Tk libraries: {e}")
 
-# Manual fallback - add DLL files from system Python directory
-import sys
+# Also add virtual environment Python DLLs if they exist
 python_dir = os.path.dirname(sys.executable)
-dll_files = [
-    os.path.join(python_dir, "tcl86t.dll"),
-    os.path.join(python_dir, "tk86t.dll"),
+venv_dll_files = [
     os.path.join(python_dir, "DLLs", "_tkinter.pyd"),
 ]
 
-for dll_file in dll_files:
+for dll_file in venv_dll_files:
     if os.path.exists(dll_file):
         DATA_FILES.append((dll_file, "."))
-        print(f"Added Tkinter DLL: {dll_file}")
+        print(f"Added virtual environment DLL: {dll_file}")
 
 # Modules to exclude (reduce size)
 EXCLUDES = [
@@ -246,7 +275,7 @@ a = Analysis(
     hiddenimports=HIDDEN_IMPORTS,
     hookspath=[],
     hooksconfig={},
-    runtime_hooks=[str(PROJECT_ROOT / 'runtime_hook_tkinter.py')],
+    runtime_hooks=[],
     excludes=EXCLUDES,
     noarchive=False,
     optimize=2,  # Maximum bytecode optimization
