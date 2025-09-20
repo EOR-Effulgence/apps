@@ -20,7 +20,7 @@ ModuleNotFoundError: No module named 'socket'
 FileNotFoundError: Tcl data directory "C:\Users\mhuser\AppData\Local\Temp\_MEI593082\_tcl_data" not found.
 ```
 
-**原因**: FreeCAD Python環境のTkinter設定に問題があり、TclTkデータファイルが不完全
+**原因**: 一部のPython環境のTkinter設定に問題があり、TclTkデータファイルが不完全
 **解決**: コンソール版実行ファイルを作成してTkinter依存を回避
 
 ## ✅ 実装した解決策
@@ -70,7 +70,7 @@ All tests passed!
 
 | 実行ファイル | サイズ | 状況 | 機能 |
 |-------------|-------|------|------|
-| `PDF2PNG_Converter.exe` | 40.7MB | ⚠️ Tkinter問題あり | GUI版（FreeCAD環境で制限） |
+| `PDF2PNG_Converter.exe` | 40.7MB | ⚠️ Tkinter問題あり | GUI版（一部環境で制限） |
 | `PDF2PNG_Console.exe` | 38.9MB | ✅ 完全動作 | コンソール版（推奨） |
 
 ## 🎯 推奨使用方法
@@ -94,7 +94,7 @@ python main.py
 ## 🔍 技術的詳細
 
 ### **根本原因分析**
-1. **FreeCAD Python環境**: 限定的なTkinter実装
+1. **特定のPython環境**: 限定的なTkinter実装
 2. **PyInstaller制限**: 複雑な依存関係の自動検出失敗
 3. **Windows固有問題**: Tcl/Tkデータファイルの不完全なパッケージング
 
@@ -138,7 +138,7 @@ python main.py
 
 ### **クロスプラットフォーム対応**
 - 標準Python環境でのビルド推奨
-- 特殊環境（FreeCAD等）での制限理解
+- 特殊環境での制限理解
 - 複数バージョンでの並行開発
 
 ## 🎉 結論

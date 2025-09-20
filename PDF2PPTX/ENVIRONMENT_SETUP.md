@@ -3,7 +3,7 @@
 ## 🎯 Python仮想環境構築完了
 
 **実行日時**: 2025年9月20日
-**Python環境**: FreeCAD Python 3.11.10
+**Python環境**: Python 3.11
 **仮想環境**: venv
 
 ## ✅ 構築済み環境
@@ -76,7 +76,7 @@ venv\Scripts\pip.exe freeze > requirements.txt
 venv\Scripts\pyinstaller.exe build_windows.spec --clean --noconfirm
 
 # または直接PyInstaller使用
-"C:\Users\mhuser\AppData\Roaming\Python\Python311\Scripts\pyinstaller.exe" build_windows.spec --clean --noconfirm
+pyinstaller build_windows.spec --clean --noconfirm
 ```
 
 ### **テスト実行**
@@ -153,7 +153,7 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```bash
 # 仮想環境再作成
 rm -rf venv
-"C:\Program Files\FreeCAD 1.0\bin\python.exe" -m venv venv
+python -m venv venv
 venv\Scripts\pip.exe install -r requirements.txt
 ```
 
@@ -161,14 +161,14 @@ venv\Scripts\pip.exe install -r requirements.txt
 ```bash
 # キャッシュクリア・再ビルド
 rm -rf build dist
-"C:\Users\mhuser\AppData\Roaming\Python\Python311\Scripts\pyinstaller.exe" build_windows.spec --clean --noconfirm
+pyinstaller build_windows.spec --clean --noconfirm
 ```
 
 ## 📊 環境情報
 
 | 項目 | 値 |
 |------|-----|
-| Python バージョン | 3.11.10 |
+| Python バージョン | 3.11+ |
 | 仮想環境 | venv (標準) |
 | PyInstaller | 6.16.0 |
 | ビルドプラットフォーム | Windows 10/11 x64 |

@@ -22,7 +22,7 @@ FileNotFoundError: Tcl data directory "C:\Users\mhuser\AppData\Local\Temp\_MEI**
 - **バンドル内でのTcl/Tkライブラリ検索**
 
 ### 3. データファイルのインクルード
-- FreeCAD環境からのTkinter関連ファイルの自動検出
+- Python環境からのTkinter関連ファイルの自動検出
 - 複数のフォールバックパスでの検索
 
 ## 📊 現在の状況
@@ -36,10 +36,10 @@ FileNotFoundError: Tcl data directory "C:\Users\mhuser\AppData\Local\Temp\_MEI**
 
 ## 🎯 根本原因
 
-この問題は **FreeCAD Python環境 + PyInstaller** の組み合わせで発生する既知の制約：
+この問題は **特定のPython環境 + PyInstaller** の組み合わせで発生する既知の制約：
 
-1. **FreeCAD PythonのTkinter設定**: 標準的なPython環境と異なるTcl/Tkの配置
-2. **PyInstallerの制限**: FreeCADの独特なライブラリ構造を完全に解析できない
+1. **一部Python環境のTkinter設定**: 標準的なPython環境と異なるTcl/Tkの配置
+2. **PyInstallerの制限**: 特定の独特なライブラリ構造を完全に解析できない
 3. **Tcl/Tkデータファイル**: 必要なライブラリファイルの場所が特定困難
 
 ## 🔧 代替解決策
@@ -55,8 +55,8 @@ pyinstaller build_windows.spec --clean
 
 ### B. 開発モードでの実行
 ```bash
-# FreeCAD Python環境で直接実行
-"C:\Program Files\FreeCAD 1.0\bin\python.exe" main.py
+# 特定のPython環境で直接実行
+python main.py
 ```
 
 ### C. コンソール版の使用
@@ -75,7 +75,7 @@ dist\PDF2PNG_Console.exe
 3. **複数パスでのライブラリ検索**
 
 ### 制限事項
-- FreeCAD Python特有のTcl/Tk配置による制約
+- 一部Python環境特有のTcl/Tk配置による制約
 - PyInstallerのフック機能の限界
 - Windowsテンポラリディレクトリへの依存
 

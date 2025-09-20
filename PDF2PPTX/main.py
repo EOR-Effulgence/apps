@@ -134,32 +134,32 @@ def test_mode() -> int:
         from src.application.services.conversion_service import ConversionService
         from src.utils.path_utils import PathManager
 
-        print("✅ All core modules imported successfully")
+        print("[OK] All core modules imported successfully")
 
         # Test configuration system
         config = get_app_config()
-        print(f"✅ Configuration loaded: {config.window_title}")
+        print(f"[OK] Configuration loaded: {config.window_title}")
 
         # Test path manager
         path_manager = PathManager()
-        print(f"✅ Path manager initialized: {path_manager.base_path}")
+        print(f"[OK] Path manager initialized: {path_manager.base_path}")
 
         # Test PDF processor
         pdf_processor = PDFProcessor()
-        print("✅ PDF processor initialized")
+        print("[OK] PDF processor initialized")
 
         # Test conversion service
         conversion_service = ConversionService(path_manager)
-        print("✅ Conversion service initialized")
+        print("[OK] Conversion service initialized")
 
         print("")
-        print("🎉 All tests passed successfully!")
+        print("[SUCCESS] All tests passed successfully!")
         print("Build validation completed.")
 
         return 0
 
     except Exception as e:
-        print(f"❌ Test failed: {e}")
+        print(f"[ERROR] Test failed: {e}")
         import traceback
         traceback.print_exc()
         return 1
@@ -218,8 +218,8 @@ async def main_async() -> int:
         return 0
 
     except ImportError as e:
-        print(f"❌ Import Error: {e}")
-        print("\n🔧 Possible solutions:")
+        print(f"[ERROR] Import Error: {e}")
+        print("\nPossible solutions:")
         print("1. Install required dependencies:")
         print("   pip install -r requirements.txt")
         print("\n2. Ensure you're running from the project root directory")
@@ -227,12 +227,12 @@ async def main_async() -> int:
         return 1
 
     except KeyboardInterrupt:
-        print("\n👋 Application interrupted by user")
+        print("\nApplication interrupted by user")
         return 0
 
     except Exception as e:
-        print(f"❌ Unexpected error: {e}")
-        print("\n🐛 This appears to be a bug. Please check:")
+        print(f"[ERROR] Unexpected error: {e}")
+        print("\nThis appears to be a bug. Please check:")
         print("1. All dependencies are properly installed")
         print("2. No files are missing from the src/ directory")
         print("3. You have proper permissions to read/write project files")

@@ -2,7 +2,7 @@
 """
 PDF2PNG/PDF2PPTX Converter v3.0 - Console Mode Entry Point
 
-Standalone console version that bypasses Tkinter issues in FreeCAD environment.
+Standalone console version that bypasses Tkinter issues in certain Python environments.
 This version provides basic PDF conversion functionality through command line.
 
 Usage:

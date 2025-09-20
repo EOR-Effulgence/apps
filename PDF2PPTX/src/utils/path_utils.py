@@ -8,7 +8,7 @@ from __future__ import annotations
 import os
 import sys
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from .error_handling import FileSystemError, validate_input_path, validate_output_path
 
 
@@ -287,6 +287,157 @@ class PathManager:
 
         # Ensure required subdirectories can be created
         self.ensure_directories()
+
+    def get_available_disk_space(self, path: Optional[Path] = None) -> int:
+        """
+        Get available disk space in bytes.
+
+        Args:
+            path: Path to check disk space for. Defaults to output directory.
+
+        Returns:
+            Available disk space in bytes
+
+        Raises:
+            FileSystemError: If disk space cannot be determined
+        """
+        check_path = path or self._output_dir
+        try:
+            import shutil
+            total, used, free = shutil.disk_usage(check_path.parent)
+            return free
+        except Exception as e:
+            raise FileSystemError(
+                message="ディスク容量を取得できません",
+                suggestion="ディスクの状態を確認してください",
+                original_error=e
+            )
+
+    def get_file_info(self, file_path: Path) -> Dict[str, Any]:
+        """
+        Get comprehensive file information.
+
+        Args:
+            file_path: Path to file
+
+        Returns:
+            Dictionary with file information
+
+        Raises:
+            FileSystemError: If file info cannot be retrieved
+        """
+        try:
+            stat_info = file_path.stat()
+            return {
+                'name': file_path.name,
+                'path': str(file_path),
+                'size': stat_info.st_size,
+                'size_mb': stat_info.st_size / (1024 * 1024),
+                'created': stat_info.st_ctime,
+                'modified': stat_info.st_mtime,
+                'accessed': stat_info.st_atime,
+                'extension': file_path.suffix.lower(),
+                'is_pdf': file_path.suffix.lower() == '.pdf',
+                'permissions': oct(stat_info.st_mode)[-3:]
+            }
+        except Exception as e:
+            raise FileSystemError(
+                message=f"ファイル情報を取得できません: {file_path}",
+                suggestion="ファイルが存在し、アクセス可能であることを確認してください",
+                original_error=e
+            )
+
+    def create_backup(self, file_path: Path, backup_dir: Optional[Path] = None) -> Path:
+        """
+        Create backup of important file.
+
+        Args:
+            file_path: File to backup
+            backup_dir: Backup directory. Defaults to base_path/backups
+
+        Returns:
+            Path to backup file
+
+        Raises:
+            FileSystemError: If backup creation fails
+        """
+        if backup_dir is None:
+            backup_dir = self._base_path / "backups"
+
+        backup_dir.mkdir(parents=True, exist_ok=True)
+
+        # Generate backup filename with timestamp
+        import datetime
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        backup_name = f"{file_path.stem}_{timestamp}{file_path.suffix}"
+        backup_path = backup_dir / backup_name
+
+        try:
+            import shutil
+            shutil.copy2(file_path, backup_path)
+            return backup_path
+        except Exception as e:
+            raise FileSystemError(
+                message=f"バックアップの作成に失敗しました: {file_path}",
+                suggestion="十分なディスク容量があることを確認してください",
+                original_error=e
+            )
+
+    def reset_directories(self) -> Dict[str, int]:
+        """
+        Reset both input and output directories.
+
+        Returns:
+            Dictionary with count of deleted items from each directory
+
+        Raises:
+            FileSystemError: If reset fails
+        """
+        results = {}
+
+        for dir_name, directory in [("input", self._input_dir), ("output", self._output_dir)]:
+            try:
+                count = self.clean_directory(directory, confirm=False)
+                results[dir_name] = count
+            except Exception as e:
+                raise FileSystemError(
+                    message=f"{dir_name}ディレクトリのリセットに失敗しました",
+                    suggestion="ディレクトリのアクセス権限を確認してください",
+                    original_error=e
+                )
+
+        return results
+
+    def validate_output_directory(self) -> None:
+        """
+        Validate output directory is ready for writing.
+
+        Raises:
+            FileSystemError: If output directory is invalid
+        """
+        # Ensure directory exists
+        self.ensure_directories()
+
+        # Check write permissions
+        if not os.access(self._output_dir, os.W_OK):
+            raise FileSystemError(
+                message=f"出力ディレクトリ '{self._output_dir}' への書き込み権限がありません",
+                suggestion="ディレクトリの権限設定を確認してください"
+            )
+
+        # Check available space (at least 100MB)
+        try:
+            free_space = self.get_available_disk_space()
+            if free_space < 100 * 1024 * 1024:  # 100MB
+                raise FileSystemError(
+                    message="出力ディレクトリのディスク容量が不足しています",
+                    suggestion="不要なファイルを削除してディスク容量を確保してください"
+                )
+        except FileSystemError:
+            raise
+        except Exception:
+            # If we can't check disk space, continue anyway
+            pass
 
 
 # Convenience functions for backward compatibility

@@ -188,6 +188,7 @@ class ConversionService:
                 page_count = self.pdf_processor.count_pages(file_path)
                 total_pages += page_count
             except Exception:
+                total_pages += 1  # Estimate 1 page if counting fails
                 continue
 
         current_page = 0
@@ -196,7 +197,8 @@ class ConversionService:
             try:
                 progress_callback(current_page, total_pages, file_path.name)
 
-                converted_files = self.pdf_processor.convert_to_images(
+                # Convert using PDF processor
+                converted_files = self.pdf_processor.convert_pdf_to_images(
                     file_path,
                     job.config,
                     self.path_manager,
@@ -204,11 +206,15 @@ class ConversionService:
                 )
 
                 output_files.extend(converted_files)
-                current_page += self.pdf_processor.count_pages(file_path)
+                try:
+                    current_page += self.pdf_processor.count_pages(file_path)
+                except Exception:
+                    current_page += 1  # Fallback increment
 
             except Exception as e:
                 # Log error but continue with other files
                 job.error_message = f"Error converting {file_path.name}: {str(e)}"
+                current_page += 1  # Continue progress
                 continue
 
         return output_files
@@ -223,6 +229,7 @@ class ConversionService:
         try:
             progress_callback(0, 1, "Creating PowerPoint presentation...")
 
+            # Convert using PDF processor
             output_file = self.pdf_processor.convert_to_pptx(
                 job.files,
                 job.config,
@@ -283,26 +290,28 @@ class ConversionService:
             Estimated time in seconds
         """
         total_pages = 0
+        total_file_size = 0
 
         for file_path in files:
             try:
                 page_count = self.pdf_processor.count_pages(file_path)
                 total_pages += page_count
+                total_file_size += file_path.stat().st_size
             except Exception:
                 total_pages += 5  # Assume 5 pages for unreadable files
+                total_file_size += 1024 * 1024  # Assume 1MB
 
-        # Estimate based on scale factor and page count
-        # Base time: 0.5 seconds per page
-        # Scale factor impact: linear increase
-        base_time_per_page = 0.5
-        scale_impact = config.scale_factor
+        # Improved estimation formula
+        base_time_per_page = 0.3 + (config.scale_factor - 1.0) * 0.2
+        size_factor = min(2.0, total_file_size / (1024 * 1024 * 10))  # Cap at 2x for 10MB+
+        dpi_factor = getattr(config, 'target_dpi', 150) / 150.0
 
-        estimated_time = total_pages * base_time_per_page * scale_impact
+        estimated_time = total_pages * base_time_per_page * size_factor * dpi_factor
 
         # Add overhead for file I/O and processing
-        overhead = len(files) * 2  # 2 seconds per file for I/O
+        overhead = len(files) * 1.0 + 2.0  # Per-file overhead plus startup
 
-        return estimated_time + overhead
+        return max(1.0, estimated_time + overhead)
 
     def validate_conversion_request(
         self,
@@ -339,12 +348,142 @@ class ConversionService:
         except Exception as e:
             return f"出力ディレクトリの確認に失敗しました: {str(e)}"
 
-        # Estimate memory usage
+        # Check estimated processing time
         estimated_time = self.estimate_conversion_time(files, config)
         if estimated_time > 300:  # 5 minutes
             return "変換時間が長すぎる可能性があります。ファイル数を減らすかスケール倍率を下げてください。"
 
+        # Check available disk space
+        try:
+            free_space = self.path_manager.get_available_disk_space()
+            estimated_output_size = self._estimate_output_size(files, config)
+            if estimated_output_size > free_space * 0.9:
+                return f"ディスク容量が不足しています。必要: {estimated_output_size/1024/1024:.1f}MB, 利用可能: {free_space/1024/1024:.1f}MB"
+        except Exception:
+            pass  # Continue if disk space check fails
+
         return None
+
+    def _estimate_output_size(self, files: List[Path], config: ConversionConfig) -> int:
+        """
+        Estimate total output file size in bytes.
+
+        Args:
+            files: Input PDF files
+            config: Conversion configuration
+
+        Returns:
+            Estimated output size in bytes
+        """
+        total_pages = 0
+        for file_path in files:
+            try:
+                page_count = self.pdf_processor.count_pages(file_path)
+                total_pages += page_count
+            except Exception:
+                total_pages += 5
+
+        # Rough estimation based on scale factor and DPI
+        scale_factor = config.scale_factor
+        dpi = getattr(config, 'target_dpi', 150)
+
+        # Base size per page (A4 at 150 DPI ≈ 1MB)
+        base_size_per_page = 1024 * 1024  # 1MB
+        size_multiplier = (scale_factor ** 2) * (dpi / 150) ** 2
+
+        estimated_size = total_pages * base_size_per_page * size_multiplier
+        return int(estimated_size)
+
+    def reset_folders(self) -> int:
+        """
+        Reset input and output folders.
+
+        Returns:
+            Total number of items deleted
+
+        Raises:
+            UserFriendlyError: If reset fails
+        """
+        try:
+            results = self.path_manager.reset_directories()
+            return sum(results.values())
+        except Exception as e:
+            raise UserFriendlyError(
+                message="フォルダの初期化に失敗しました",
+                suggestion="ファイルが他のプログラムで使用されていないか確認してください",
+                original_error=e
+            )
+
+    def convert_to_images(self, config: ConversionConfig) -> List[Path]:
+        """
+        Synchronous image conversion for simple use cases.
+
+        Args:
+            config: Conversion configuration
+
+        Returns:
+            List of generated image files
+
+        Raises:
+            UserFriendlyError: If conversion fails
+        """
+        try:
+            files = self.path_manager.find_pdf_files()
+            if not files:
+                raise UserFriendlyError(
+                    message="変換するPDFファイルが見つかりません",
+                    suggestion="InputフォルダにPDFファイルを配置してください"
+                )
+
+            output_files = []
+            for file_path in files:
+                converted_files = self.pdf_processor.convert_pdf_to_images(
+                    file_path, config, self.path_manager
+                )
+                output_files.extend(converted_files)
+
+            return output_files
+
+        except Exception as e:
+            if isinstance(e, UserFriendlyError):
+                raise
+            raise UserFriendlyError(
+                message="PNG変換中にエラーが発生しました",
+                suggestion="ファイルの形式と権限を確認してください",
+                original_error=e
+            )
+
+    def convert_to_powerpoint(self, config: ConversionConfig) -> Optional[Path]:
+        """
+        Synchronous PowerPoint conversion for simple use cases.
+
+        Args:
+            config: Conversion configuration
+
+        Returns:
+            Path to generated PowerPoint file
+
+        Raises:
+            UserFriendlyError: If conversion fails
+        """
+        try:
+            files = self.path_manager.find_pdf_files()
+            if not files:
+                raise UserFriendlyError(
+                    message="変換するPDFファイルが見つかりません",
+                    suggestion="InputフォルダにPDFファイルを配置してください"
+                )
+
+            return self.pdf_processor.convert_to_pptx(files, config, self.path_manager)
+
+        except Exception as e:
+            if isinstance(e, UserFriendlyError):
+                raise
+            raise UserFriendlyError(
+                message="PowerPoint変換中にエラーが発生しました",
+                suggestion="ファイルの形式と権限を確認してください",
+                original_error=e
+            )
 
     def __del__(self):
         """Cleanup resources."""

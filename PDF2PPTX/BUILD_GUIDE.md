@@ -34,13 +34,13 @@ dist\PDF2PNG_Console.exe --test-mode
 - **Disk Space**: 500MB for development environment
 
 ### **Verified Working Environments**
-1. **FreeCAD Python 3.11.10** ✅ (Used for this build)
-   - Path: `C:\Program Files\FreeCAD 1.0\bin\python.exe`
-   - PyInstaller: `C:\Users\mhuser\AppData\Roaming\Python\Python311\Scripts\pyinstaller.exe`
-
-2. **Python.org Standard Installation** ✅ (Recommended)
+1. **Python.org Standard Installation** ✅ (Recommended)
    - Download from python.org
    - Full feature support including GUI
+
+2. **System Python** ✅ (Alternative)
+   - Windows Store Python or system-installed Python
+   - Compatible with all features
 
 ### **Dependencies Installation**
 ```bash
@@ -81,7 +81,7 @@ pyinstaller build_windows.spec --clean --noconfirm
 **Features**:
 - ✅ Graphical user interface
 - ⚠️ Requires properly configured Tkinter
-- ❌ May have issues in FreeCAD environment
+- ❌ May have issues in some Python environments
 
 ### **UV High-Performance Build**
 ```bash
@@ -138,7 +138,7 @@ FileNotFoundError: Tcl data directory not found
 pyinstaller build_console.spec --clean --noconfirm
 ```
 
-**Root Cause**: FreeCAD Python environment has incomplete Tkinter installation
+**Root Cause**: Some Python environments may have incomplete Tkinter installation
 
 ### **Issue 2: Multiprocessing Import Error**
 ```

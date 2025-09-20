@@ -58,21 +58,110 @@ Old → New:
 Version: 2.0.0 (Refactored)
 """
 
-__version__ = "2.0.0"
-__author__ = "PDF2PNG Team"
+# Version information
+__version__ = "3.0.0"
+__version_info__ = (3, 0, 0)
+__author__ = "PDF2PPTX Project"
+__email__ = "support@pdf2pptx.example.com"
 __license__ = "MIT"
+__copyright__ = "Copyright (c) 2025 PDF2PPTX Project"
 
-# Export main interfaces for external use
-from .core.pdf_processor import ConversionConfig, PDFProcessingError
-from .utils.error_handling import UserFriendlyError
+# Package metadata
+__title__ = "PDF2PPTX Converter"
+__description__ = "Professional PDF to PNG/PowerPoint conversion tool"
+__url__ = "https://github.com/example/pdf2pptx"
+
+# Public API exports
+from .core.pdf_processor import PDFProcessor, ConversionConfig
+from .core.image_converter import ImageConversionService
+from .core.powerpoint_converter import PowerPointConversionService
+from .utils.error_handling import (
+    UserFriendlyError,
+    ErrorSeverity,
+    PDFConversionError,
+    FileSystemError,
+    ValidationError
+)
 from .utils.path_utils import PathManager
-from .config import ApplicationConfig, get_app_config
+from .config import get_app_config, ApplicationConfig
 
 __all__ = [
+    # Version info
+    "__version__",
+    "__version_info__",
+    "__author__",
+    "__title__",
+    "__description__",
+
+    # Core functionality
+    "PDFProcessor",
     "ConversionConfig",
-    "PDFProcessingError",
+    "ImageConversionService",
+    "PowerPointConversionService",
+
+    # Error handling
     "UserFriendlyError",
+    "ErrorSeverity",
+    "PDFConversionError",
+    "FileSystemError",
+    "ValidationError",
+
+    # Utilities
     "PathManager",
-    "ApplicationConfig",
-    "get_app_config"
+
+    # Configuration
+    "get_app_config",
+    "ApplicationConfig"
 ]
+
+
+# Module level functions for convenience
+def create_pdf_processor(config: ConversionConfig = None) -> PDFProcessor:
+    """
+    Create a PDFProcessor instance with optional configuration.
+
+    Args:
+        config: Optional conversion configuration
+
+    Returns:
+        Configured PDFProcessor instance
+    """
+    return PDFProcessor(config)
+
+
+def create_image_converter(config: ConversionConfig = None) -> ImageConversionService:
+    """
+    Create an ImageConversionService instance.
+
+    Args:
+        config: Optional conversion configuration
+
+    Returns:
+        Configured ImageConversionService instance
+    """
+    if config is None:
+        config = ConversionConfig()
+    return ImageConversionService(config)
+
+
+def create_powerpoint_converter(config: ConversionConfig = None) -> PowerPointConversionService:
+    """
+    Create a PowerPointConversionService instance.
+
+    Args:
+        config: Optional conversion configuration
+
+    Returns:
+        Configured PowerPointConversionService instance
+    """
+    if config is None:
+        config = ConversionConfig()
+    return PowerPointConversionService(config)
+
+
+# Add convenience functions to __all__
+__all__.extend([
+    "create_pdf_processor",
+    "create_image_converter",
+    "create_powerpoint_converter"
+])

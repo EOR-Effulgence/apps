@@ -9,8 +9,9 @@ import fitz
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Generator, Iterator, Optional, Tuple
+from typing import Generator, Iterator, Optional, Tuple, List, Dict, Any
 from io import BytesIO
+from abc import ABC, abstractmethod
 
 
 @dataclass
@@ -52,17 +53,58 @@ class PDFProcessor:
         """Initialize processor with configuration."""
         self.config = config or ConversionConfig()
 
-    def convert_to_images(self, pdf_path: Path, output_dir: Path) -> bool:
-        """Convert PDF to PNG images."""
+    def count_pages(self, pdf_path: Path) -> int:
+        """Count pages in PDF file."""
         try:
-            return convert_pdf_to_images(pdf_path, output_dir, self.config)
+            with open_pdf_document(pdf_path) as doc:
+                return len(doc)
+        except Exception as e:
+            raise PDFProcessingError(f"Failed to count pages in {pdf_path}: {e}")
+
+    def convert_pdf_to_images(self, pdf_path: Path, config: ConversionConfig, path_manager, progress_callback=None) -> List[Path]:
+        """Convert PDF to images using image converter service."""
+        try:
+            from .image_converter import ImageConversionService
+            service = ImageConversionService(config)
+            if progress_callback:
+                service.set_progress_callback(progress_callback)
+
+            output_dir = path_manager.output_dir
+            return service.convert_pdf_to_images(pdf_path, output_dir)
         except Exception as e:
             raise PDFProcessingError(f"Failed to convert {pdf_path} to images: {e}")
 
-    def convert_to_powerpoint(self, pdf_path: Path, output_dir: Path) -> bool:
+    def convert_to_pptx(self, files: List[Path], config: ConversionConfig, path_manager) -> Optional[Path]:
+        """Convert PDFs to PowerPoint using powerpoint converter service."""
+        try:
+            from .powerpoint_converter import PowerPointConversionService
+            service = PowerPointConversionService(config)
+
+            if len(files) == 1:
+                output_dir = path_manager.output_dir
+                return service.convert_pdf_to_powerpoint(files[0], output_dir)
+            else:
+                # Multiple files to single presentation
+                output_path = path_manager.output_dir / f"merged_presentation.pptx"
+                return service.convert_multiple_pdfs_to_single_presentation(files, output_path)
+        except Exception as e:
+            raise PDFProcessingError(f"Failed to convert PDFs to PowerPoint: {e}")
+
+    def convert_to_images(self, pdf_path: Path, output_dir: Path) -> List[Path]:
+        """Convert PDF to PNG images."""
+        try:
+            from .image_converter import ImageConversionService
+            service = ImageConversionService(self.config)
+            return service.convert_pdf_to_images(pdf_path, output_dir)
+        except Exception as e:
+            raise PDFProcessingError(f"Failed to convert {pdf_path} to images: {e}")
+
+    def convert_to_powerpoint(self, pdf_path: Path, output_dir: Path) -> Path:
         """Convert PDF to PowerPoint presentation."""
         try:
-            return convert_pdf_to_powerpoint(pdf_path, output_dir, self.config)
+            from .powerpoint_converter import PowerPointConversionService
+            service = PowerPointConversionService(self.config)
+            return service.convert_pdf_to_powerpoint(pdf_path, output_dir)
         except Exception as e:
             raise PDFProcessingError(f"Failed to convert {pdf_path} to PowerPoint: {e}")
 
@@ -227,6 +269,60 @@ def get_pdf_pages(pdf_path: Path) -> Iterator[fitz.Page]:
             yield doc[page_num]
 
 
+def extract_pdf_metadata(pdf_path: Path) -> Dict[str, Any]:
+    """
+    Extract comprehensive metadata from PDF file.
+
+    Args:
+        pdf_path: Path to PDF file
+
+    Returns:
+        Dictionary containing PDF metadata
+
+    Raises:
+        PDFProcessingError: If metadata extraction fails
+    """
+    try:
+        with open_pdf_document(pdf_path) as doc:
+            metadata = doc.metadata or {}
+
+            # Basic information
+            info = {
+                'title': metadata.get('title', ''),
+                'author': metadata.get('author', ''),
+                'subject': metadata.get('subject', ''),
+                'keywords': metadata.get('keywords', ''),
+                'creator': metadata.get('creator', ''),
+                'producer': metadata.get('producer', ''),
+                'creation_date': metadata.get('creationDate', ''),
+                'modification_date': metadata.get('modDate', ''),
+                'page_count': len(doc),
+                'file_size': pdf_path.stat().st_size,
+                'encrypted': doc.needs_pass,
+                'pdf_version': getattr(doc, 'pdf_version', 'unknown')
+            }
+
+            # Page analysis
+            pages_info = []
+            for page_num, page in enumerate(doc):
+                rect = page.rect
+                pages_info.append({
+                    'page_number': page_num + 1,
+                    'width': rect.width,
+                    'height': rect.height,
+                    'rotation': page.rotation,
+                    'has_images': bool(page.get_images()),
+                    'has_text': bool(page.get_text().strip()),
+                    'mediabox': [rect.x0, rect.y0, rect.x1, rect.y1]
+                })
+
+            info['pages'] = pages_info
+            return info
+
+    except Exception as e:
+        raise PDFProcessingError(f"Failed to extract metadata from {pdf_path}: {e}")
+
+
 def count_total_pages(pdf_files: list[Path]) -> int:
     """
     Count total pages across multiple PDF files.
@@ -286,3 +382,23 @@ def validate_conversion_config(config: ConversionConfig) -> None:
 
     if config.target_dpi < 72 or config.target_dpi > 600:
         raise ValueError("DPI must be between 72 and 600")
+
+
+class ConversionService(ABC):
+    """
+    Abstract base class for conversion services.
+    Defines the interface for PDF conversion operations.
+    """
+
+    def __init__(self, config: ConversionConfig):
+        self.config = config
+        self.validate_config()
+
+    def validate_config(self) -> None:
+        """Validate the conversion configuration."""
+        validate_conversion_config(self.config)
+
+    @abstractmethod
+    def convert(self, input_path: Path, output_path: Path) -> bool:
+        """Abstract method for conversion operation."""
+        pass

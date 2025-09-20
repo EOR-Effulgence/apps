@@ -118,13 +118,14 @@ assets_dir = PROJECT_ROOT / "assets"
 if assets_dir.exists():
     DATA_FILES.append((str(assets_dir), "assets"))
 
-# Add Tcl/Tk data files - Fixed for FreeCAD environment
+# Add Tcl/Tk data files - System Python environment
 try:
     import tkinter
+    import sys
     import os
 
-    # Get Python installation directory from FreeCAD
-    python_dir = r"C:\Program Files\FreeCAD 1.0\bin"
+    # Get Python installation directory from system
+    python_dir = os.path.dirname(sys.executable)
     tcl_dir = os.path.join(python_dir, "tcl", "tcl8.6")
     tk_dir = os.path.join(python_dir, "tcl", "tk8.6")
 
@@ -147,8 +148,9 @@ try:
 except Exception as e:
     print(f"Warning: Could not locate Tcl/Tk data: {e}")
 
-# Manual fallback - add DLL files from FreeCAD bin directory
-python_dir = r"C:\Program Files\FreeCAD 1.0\bin"
+# Manual fallback - add DLL files from system Python directory
+import sys
+python_dir = os.path.dirname(sys.executable)
 dll_files = [
     os.path.join(python_dir, "tcl86t.dll"),
     os.path.join(python_dir, "tk86t.dll"),
@@ -239,11 +241,7 @@ EXCLUDES = [
 a = Analysis(
     ['main.py'],
     pathex=[str(PROJECT_ROOT), str(SRC_PATH)],
-    binaries=[
-        # Tkinter DLLs for proper GUI functionality
-        (r"C:\Program Files\FreeCAD 1.0\bin\tcl86t.dll", "."),
-        (r"C:\Program Files\FreeCAD 1.0\bin\tk86t.dll", "."),
-    ],
+    binaries=[],
     datas=DATA_FILES,
     hiddenimports=HIDDEN_IMPORTS,
     hookspath=[],

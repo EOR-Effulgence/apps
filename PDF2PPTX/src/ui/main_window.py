@@ -218,8 +218,11 @@ class MainWindow:
 
     def _create_widgets(self) -> None:
         """Create and layout GUI widgets."""
+        # Main menu bar
+        self._create_menu_bar()
+
         # Configuration frame
-        config_frame = tk.Frame(self.root)
+        config_frame = self.theme_manager.create_styled_frame(self.root)
         config_frame.pack(padx=10, pady=10, fill="x")
 
         # Scale factor input
@@ -258,29 +261,29 @@ class MainWindow:
 
         button_config = {"width": 35, "height": 2, "font": ("Arial", 10)}
 
-        self.btn_pdf2png = tk.Button(
+        self.btn_pdf2png = self.theme_manager.create_styled_button(
             buttons_frame,
-            text="📄 PDF → PNG 変換",
+            text="🖼️ PDF → PNG 変換",
             command=self._safe_execute(self._convert_to_images),
             **button_config
         )
-        self.btn_pdf2png.pack(pady=2)
+        self.btn_pdf2png.pack(pady=3)
 
-        self.btn_pdf2pptx = tk.Button(
+        self.btn_pdf2pptx = self.theme_manager.create_styled_button(
             buttons_frame,
-            text="📈 PDF → PPTX 変換 (A3横)",
+            text="📊 PDF → PPTX 変換 (A3横)",
             command=self._safe_execute(self._convert_to_pptx),
             **button_config
         )
-        self.btn_pdf2pptx.pack(pady=2)
+        self.btn_pdf2pptx.pack(pady=3)
 
-        self.btn_reset = tk.Button(
+        self.btn_reset = self.theme_manager.create_styled_button(
             buttons_frame,
-            text="🧹 Input/Output フォルダ初期化",
+            text="🗂️ Input/Output フォルダ初期化",
             command=self._safe_execute(self._reset_folders),
             **button_config
         )
-        self.btn_reset.pack(pady=2)
+        self.btn_reset.pack(pady=3)
 
         # Progress bar
         self.progress = ttk.Progressbar(
@@ -495,6 +498,100 @@ class MainWindow:
             messagebox.showerror("設定エラー", str(e))
         except Exception as e:
             messagebox.showerror("設定エラー", f"予期しないエラーが発生しました: {e}")
+
+    def _create_menu_bar(self) -> None:
+        """Create the application menu bar with interface options."""
+        menubar = tk.Menu(self.root)
+        self.root.config(menu=menubar)
+
+        # View menu for interface options
+        view_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="表示", menu=view_menu)
+
+        # Interface submenu
+        interface_menu = tk.Menu(view_menu, tearoff=0)
+        view_menu.add_cascade(label="インターフェース", menu=interface_menu)
+
+        self.theme_var = tk.StringVar(value=self.theme_manager.current_theme.value)
+
+        for theme_mode, display_name in self.theme_manager.get_available_themes().items():
+            interface_menu.add_radiobutton(
+                label=display_name,
+                variable=self.theme_var,
+                value=theme_mode.value,
+                command=lambda mode=theme_mode: self._change_theme(mode)
+            )
+
+        # Add separator and toggle option
+        interface_menu.add_separator()
+        interface_menu.add_command(
+            label="スタイル切り替え (Ctrl+T)",
+            command=self._toggle_theme,
+            accelerator="Ctrl+T"
+        )
+
+        # Bind keyboard shortcut
+        self.root.bind('<Control-t>', lambda e: self._toggle_theme())
+        self.root.bind('<Control-T>', lambda e: self._toggle_theme())
+
+        # Help menu
+        help_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="ヘルプ", menu=help_menu)
+        help_menu.add_command(label="PDF2PPTX について", command=self._show_about)
+
+    def _change_theme(self, theme_mode: ThemeMode) -> None:
+        """Change the application theme."""
+        self.theme_manager.set_theme(theme_mode)
+        self.theme_var.set(theme_mode.value)
+
+    def _toggle_theme(self) -> None:
+        """Toggle between light and deep blue themes."""
+        self.theme_manager.toggle_theme()
+        self.theme_var.set(self.theme_manager.current_theme.value)
+
+    def _setup_theme_support(self) -> None:
+        """Setup theme change callback and initial styling."""
+        self.theme_manager.register_theme_callback(
+            "main_window",
+            self._on_theme_changed
+        )
+
+    def _on_theme_changed(self, theme: ThemeStyle) -> None:
+        """Called when theme changes to update all UI elements."""
+        self._apply_current_theme()
+
+    def _apply_current_theme(self) -> None:
+        """Apply the current theme to all UI elements."""
+        theme = self.theme_manager.get_current_theme()
+
+        # Apply to root window
+        self.root.configure(bg=theme.colors.bg_primary)
+
+        # Update all themed widgets
+        self._update_widget_themes(self.root, theme)
+
+    def _update_widget_themes(self, parent: tk.Widget, theme: ThemeStyle) -> None:
+        """Recursively update themes for all child widgets."""
+        for child in parent.winfo_children():
+            self.theme_manager.apply_theme_to_widget(child)
+            if hasattr(child, 'winfo_children'):
+                self._update_widget_themes(child, theme)
+
+    def _show_about(self) -> None:
+        """Show about dialog."""
+        about_text = (
+            "PDF2PPTX Converter v3.0\n\n"
+            "PDFファイルをPNG画像やPowerPointプレゼンテーションに\n"
+            "変換するアプリケーションです。\n\n"
+            "主な機能:\n"
+            "• PDF → PNG変換 (スケール調整可能)\n"
+            "• PDF → PPTX変換 (A3横向きレイアウト)\n"
+            "• 自動回転機能\n"
+            "• 深い青色のモダンインターフェース\n"
+            "• 設定の永続化\n\n"
+            "© 2025 PDF2PPTX Project"
+        )
+        messagebox.showinfo("PDF2PPTX について", about_text)
 
     def _show_error(self, error: UserFriendlyError) -> None:
         """Display error message to user."""

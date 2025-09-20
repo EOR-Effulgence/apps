@@ -1,7 +1,7 @@
 # -*- mode: python ; coding: utf-8 -*-
 """
 Simple PyInstaller spec file for PDF2PNG/PDF2PPTX Converter v3.0
-Minimal configuration to avoid Tkinter issues with FreeCAD Python environment.
+Minimal configuration for clean Python environment setup.
 """
 
 import sys

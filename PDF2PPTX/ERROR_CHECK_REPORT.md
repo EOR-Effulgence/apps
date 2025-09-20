@@ -80,7 +80,7 @@ if 'powerpoint_label' in default_dict and isinstance(default_dict['powerpoint_la
 ### 🟡 残存する制約
 
 1. **Tkinter初期化問題**
-   - **原因**: FreeCAD Python環境固有の制約
+   - **原因**: 特定のPython環境固有の制約
    - **影響**: GUI起動時のTclエラー
    - **回避策**: 開発環境実行 or 標準Python環境再ビルド
 

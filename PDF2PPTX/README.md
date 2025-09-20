@@ -132,8 +132,8 @@ pip install pyinstaller
 # Build Windows executable
 pyinstaller build_windows.spec --clean --noconfirm
 
-# Or use FreeCAD Python (if available)
-"C:\Users\mhuser\AppData\Roaming\Python\Python311\Scripts\pyinstaller.exe" build_windows.spec --clean --noconfirm
+# Build using system Python
+pyinstaller build_windows.spec --clean --noconfirm
 
 # Find executable in dist/ directory
 ./dist/PDF2PNG_Converter.exe   # Windows (37.4MB)
@@ -151,7 +151,7 @@ curl -LsSf https://astral.sh/uv/install.ps1 | powershell
 ### **Manual Development Setup**
 ```bash
 # Create virtual environment
-"C:\Program Files\FreeCAD 1.0\bin\python.exe" -m venv venv
+python -m venv venv
 
 # Activate virtual environment
 venv\Scripts\Activate.ps1

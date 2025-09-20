@@ -12,6 +12,7 @@ from enum import Enum
 from typing import Any, Callable, Optional, TypeVar
 from pathlib import Path
 from contextlib import contextmanager
+from functools import wraps
 
 # Type for decorated functions
 F = TypeVar('F', bound=Callable[..., Any])
@@ -273,28 +274,34 @@ def validate_output_path(path: Path) -> None:
         )
 
 
-def setup_logging(log_file: Optional[Path] = None) -> logging.Logger:
+def setup_logging(log_file: Optional[Path] = None, level: str = "INFO") -> logging.Logger:
     """
     Set up logging configuration for the application.
 
+    Note: This is a simplified logging setup. For advanced logging features,
+    use the logging_config module.
+
     Args:
         log_file: Optional file to write logs to
+        level: Logging level
 
     Returns:
         Configured logger instance
     """
-    logger = logging.getLogger("pdf_converter")
-    logger.setLevel(logging.DEBUG)
+    logger = logging.getLogger("pdf2pptx")
+
+    # Convert string level to logging constant
+    numeric_level = getattr(logging, level.upper(), logging.INFO)
+    logger.setLevel(numeric_level)
 
     # Clear any existing handlers
     logger.handlers.clear()
 
     # Console handler
     console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.INFO)
+    console_handler.setLevel(logging.WARNING)  # Only warnings and errors to console
     console_formatter = logging.Formatter(
-        '%(asctime)s - %(levelname)s - %(message)s',
-        datefmt='%H:%M:%S'
+        '%(levelname)s: %(message)s'
     )
     console_handler.setFormatter(console_formatter)
     logger.addHandler(console_handler)
@@ -302,10 +309,10 @@ def setup_logging(log_file: Optional[Path] = None) -> logging.Logger:
     # File handler (if specified)
     if log_file:
         log_file.parent.mkdir(parents=True, exist_ok=True)
-        file_handler = logging.FileHandler(log_file)
-        file_handler.setLevel(logging.DEBUG)
+        file_handler = logging.FileHandler(log_file, encoding='utf-8')
+        file_handler.setLevel(numeric_level)
         file_formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+            '%(asctime)s - %(name)s - %(levelname)s - %(funcName)s:%(lineno)d - %(message)s'
         )
         file_handler.setFormatter(file_formatter)
         logger.addHandler(file_handler)
@@ -332,3 +339,87 @@ def format_exception_for_user(error: Exception) -> str:
         "💡 解決方法: アプリケーションを再起動してお試しください。"
         "問題が続く場合は、入力ファイルを確認してください。"
     )
+
+
+def log_function_calls(func):
+    """
+    Decorator to log function entry and exit.
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        logger = logging.getLogger(f"pdf2pptx.{func.__module__}.{func.__name__}")
+
+        # Log function entry
+        logger.debug(f"Entering {func.__name__} with {len(args)} args, {len(kwargs)} kwargs")
+
+        try:
+            result = func(*args, **kwargs)
+            logger.debug(f"Exiting {func.__name__} successfully")
+            return result
+        except Exception as e:
+            logger.error(f"Error in {func.__name__}: {e}", exc_info=True)
+            raise
+
+    return wrapper
+
+
+class ErrorCollector:
+    """
+    Collect multiple errors for batch processing and reporting.
+    """
+
+    def __init__(self):
+        self.errors: list[Exception] = []
+        self.logger = logging.getLogger("pdf2pptx.error_collector")
+
+    def add_error(self, error: Exception, context: str = "") -> None:
+        """Add an error to the collection."""
+        self.errors.append(error)
+
+        if context:
+            self.logger.error(f"Error in {context}: {error}", exc_info=error)
+        else:
+            self.logger.error(f"Error collected: {error}", exc_info=error)
+
+    def has_errors(self) -> bool:
+        """Check if any errors were collected."""
+        return len(self.errors) > 0
+
+    def get_error_count(self) -> int:
+        """Get number of collected errors."""
+        return len(self.errors)
+
+    def get_summary(self) -> str:
+        """Get a summary of all collected errors."""
+        if not self.errors:
+            return "エラーはありません"
+
+        summary = f"収集されたエラー ({len(self.errors)}件):\n\n"
+
+        for i, error in enumerate(self.errors, 1):
+            error_msg = format_exception_for_user(error)
+            summary += f"{i}. {error_msg}\n\n"
+
+        return summary
+
+    def get_first_error(self) -> Optional[Exception]:
+        """Get the first error if any."""
+        return self.errors[0] if self.errors else None
+
+    def clear(self) -> None:
+        """Clear all collected errors."""
+        self.logger.info(f"Clearing {len(self.errors)} collected errors")
+        self.errors.clear()
+
+    def raise_if_errors(self) -> None:
+        """Raise the first error if any errors were collected."""
+        if self.errors:
+            first_error = self.errors[0]
+            if isinstance(first_error, UserFriendlyError):
+                raise first_error
+            else:
+                raise UserFriendlyError(
+                    message="複数のエラーが発生しました",
+                    suggestion=f"最初のエラー: {format_exception_for_user(first_error)}",
+                    original_error=first_error
+                )

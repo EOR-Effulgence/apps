@@ -9,7 +9,7 @@
 - **テーマ管理**: ダーク/ライトモード切り替え機能
 
 ### ✅ テスト環境・実行
-- **pytest環境構築**: FreeCAD Pythonを使用してpytest 8.4.2をインストール
+- **pytest環境構築**: Python 3.11を使用してpytest 8.4.2をインストール
 - **基本機能テスト**: 16個のテストケースを実行（12個成功、4個修正要）
 - **新規テストスイート**: test_basic_functionality.py作成（モック問題回避）
 - **依存関係確認**: PyMuPDF、python-pptx、Pillow等の全依存関係を検証
@@ -61,7 +61,7 @@ PDF2PPTX/
 ## 🚀 デプロイ状況
 
 ### ✅ 完了済み項目
-1. **開発環境準備** - FreeCAD Python 3.11.10
+1. **開発環境準備** - Python 3.11
 2. **依存関係管理** - requirements.txt検証済み
 3. **テスト実行** - 基本機能確認済み
 4. **ビルドシステム** - PyInstaller設定完了
@@ -113,4 +113,4 @@ python main.py
 **Version**: 3.0.0
 **Build Date**: 2025-09-20
 **Platform**: Windows 10/11 (64-bit)
-**Python**: 3.11.10 (FreeCAD)
+**Python**: 3.11+
